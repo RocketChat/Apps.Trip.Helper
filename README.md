@@ -48,7 +48,7 @@ Standing in an unfamiliar place, unsure of what's going on around you, can take 
   <li>Install app dependencies</li>
   
   ```
-    cd app && npm install
+    cd trip-helper && npm install
   ```
   
   <li>To install private Rocket.Chat Apps on your server, it must be in development mode. Enable Apps development mode by navigating to <i>Administration > General > Apps</i> and turn on "Enable development mode".</li>
@@ -86,13 +86,12 @@ Here are some links to examples and documentation:
 
 - [Rocket.Chat Apps TypeScript Definitions Documentation](https://rocketchat.github.io/Rocket.Chat.Apps-engine/)
 - [Rocket.Chat Apps TypeScript Definitions Repository](https://github.com/RocketChat/Rocket.Chat.Apps-engine)
-- [Example Rocket.Chat Apps](https://github.com/graywolf336/RocketChatApps)
-- [DemoApp](https://github.com/RocketChat/Rocket.Chat.Demo.App)
-- [GithubApp](https://github.com/RocketChat/Apps.Github22)
+- Demo Apps
+  - [DemoApp](https://github.com/RocketChat/Rocket.Chat.Demo.App)
+  - [GithubApp](https://github.com/RocketChat/Apps.Github22)
 - Community Forums
   - [App Requests](https://forums.rocket.chat/c/rocket-chat-apps/requests)
   - [App Guides](https://forums.rocket.chat/c/rocket-chat-apps/guides)
-  - [Top View of Both Categories](https://forums.rocket.chat/c/rocket-chat-apps)
-- [#rocketchat-apps on Open.Rocket.Chat](https://open.rocket.chat/channel/rocketchat-apps)
+  - [#rocketchat-apps on Open.Rocket.Chat](https://open.rocket.chat/channel/rocketchat-apps)
 
 
