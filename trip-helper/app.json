@@ -11,5 +11,6 @@
     "name": "trip-helper",
     "nameSlug": "trip-helper",
     "classFile": "TripHelperApp.ts",
-    "description": "Discover nearby events during your trip by uploading a photo"
+    "description": "Discover nearby events during your trip by uploading a photo",
+    "implements": []
 }
