@@ -15,7 +15,7 @@ import { ICommandUtilityParams } from "../definition/command/ICommandUtility";
 export class TripCommand implements ISlashCommand {
     public command: string = "trip";
     public i18nParamsExample: string = "tripCommandParams";
-    public i18nDescription: string = "tripCommandDescription";
+    public i18nDescription: string = "Type /trip help for more information";
     public providesPreview: boolean = false;
 
     constructor(private readonly app: TripHelperApp) {}
