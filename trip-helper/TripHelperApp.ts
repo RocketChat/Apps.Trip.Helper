@@ -40,5 +40,6 @@ export class TripHelperApp extends App {
     ): Promise<void> {
         const { user } = context;
         await sendHelperMessageOnInstall(this.getID(), user, read, modify);
+        return;
     }
 }
