@@ -4,9 +4,9 @@
     "requiredApiVersion": "^1.44.0",
     "iconFile": "icon.png",
     "author": {
-        "name": "trip-helper innovators",
+        "name": "Piyush Bhatt",
         "homepage": "https://github.com/RocketChat/Apps.trip.helper",
-        "support": "https://github.com/RocketChat/Apps.trip.helper"
+        "support": "https://github.com/RocketChat/Apps.trip.helper/issues"
     },
     "name": "trip-helper",
     "nameSlug": "trip-helper",
