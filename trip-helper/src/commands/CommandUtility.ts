@@ -54,7 +54,7 @@ export class CommandUtility implements ICommandUtility {
         switch (command) {
             case "help":
                 await handler.Help();
-                break;
+            case "config":
         }
     }
 }

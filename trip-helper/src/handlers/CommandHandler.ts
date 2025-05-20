@@ -35,4 +35,8 @@ export class CommandHandler implements IHandler {
     public async Help(): Promise<void> {
         sendHelperMessage(this.read, this.modify, this.room, this.sender);
     }
+
+    public async Configure(): Promise<void> {
+    //   const userPreferences 
+    }
 }
