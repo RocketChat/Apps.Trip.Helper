@@ -9,6 +9,8 @@ import {
 import { TripHelperApp } from "../../TripHelperApp";
 import { IHanderParams, IHandler } from "../definition/handlers/IHandler";
 import { sendHelperMessage } from "../helpers/Notifications";
+import { UserPreferenceStorage } from "../storage/UserPreferenceStorage";
+import { UserPreferenceModal } from "../modal/UserPreferenceModal";
 
 export class CommandHandler implements IHandler {
     public app: TripHelperApp;
@@ -37,6 +39,32 @@ export class CommandHandler implements IHandler {
     }
 
     public async Configure(): Promise<void> {
-    //   const userPreferences 
-    }
+		const userPreference = new UserPreferenceStorage(
+			this.persis,
+			this.read.getPersistenceReader(),
+			this.sender.id,
+		);
+		const existingPreference = await userPreference.getUserPreference();
+        
+        this.app.getLogger().info(existingPreference);
+
+		const modal = await UserPreferenceModal({
+			app: this.app,
+			modify: this.modify,
+			existingPreference: existingPreference,
+		});
+
+		if (modal instanceof Error) {
+			this.app.getLogger().error(modal.message);
+			return;
+		}
+
+		const triggerId = this.triggerId;
+		if (triggerId) {
+			await this.modify
+				.getUiController()
+				.openSurfaceView(modal, { triggerId }, this.sender);
+		}
+		return;
+	}
 }

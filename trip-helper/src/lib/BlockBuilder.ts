@@ -1,5 +1,6 @@
 import {
     ContextBlock,
+    InputBlock,
     LayoutBlockType,
     PreviewBlockBase,
     PreviewBlockWithThumb,
@@ -8,6 +9,7 @@ import {
 } from "@rocket.chat/ui-kit";
 import { PreviewBlockParam } from "../definition/ui-kit/Block/IPreviewBlock";
 import { ContextBlockParam } from "../definition/ui-kit/Block/IContextBlock";
+import { InputBlockParam } from "../definition/ui-kit/Block/IInputBlock";
 
 export class BlockBuilder {
     constructor(private readonly appId: string) {}
@@ -34,6 +36,25 @@ export class BlockBuilder {
         };
         return previewBlock;
     }
+
+    public createInputBlock(param: InputBlockParam): InputBlock {
+		const { text, element, blockId, hint, optional } = param;
+
+		const inputBlock: InputBlock = {
+			type: LayoutBlockType.INPUT,
+			label: {
+				type: TextObjectType.PLAIN_TEXT,
+				text,
+			},
+			appId: this.appId,
+			element,
+			hint,
+			optional,
+			blockId,
+		};
+
+		return inputBlock;
+	}
 
     public createContextBlock(param: ContextBlockParam): ContextBlock {
         const { contextElements, blockId } = param;
