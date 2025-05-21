@@ -1,31 +1,8 @@
-export type AIProviderType = AIProviderEnum.Llama3_2 | AIProviderEnum.Llama3_3;
-
-export enum AIProviderEnum {
-    Llama3_2 = "OpenAI",
-    Llama3_3 = "Gemini",
-}
-
-export interface IPreference {
-    userId: string;
-    AIconfiguration: {
-        AIProvider: AIProviderType;
-        Llama3_2: {
-            apiKey: string;
-            endpoint: string;
-        };
-        Llama3_3: {
-            apiKey: string;
-            endpoint: string;
-        };
-    };
-}
-
-export interface IuserPreferenceStorage {
-    storeUserPreference(preference: IPreference): Promise<void>;
-    getUserPreference(): Promise<IPreference | null>;
-    clearUserPreference(): Promise<void>;
-}
-
+import {
+    IPreference,
+    AIProviderEnum,
+} from "../definition/helper/userPreference";
+import { IuserPreferenceStorage } from "../definition/storage/IuserPreferenceStorage";
 import {
     IPersistence,
     IPersistenceRead,

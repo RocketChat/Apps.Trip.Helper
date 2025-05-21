@@ -3,7 +3,7 @@ import {
     IUIKitSurfaceViewParam,
 } from "@rocket.chat/apps-engine/definition/accessors";
 import { TripHelperApp } from "../../TripHelperApp";
-import { AIProviderEnum, IPreference } from "../storage/UserPreferenceStorage";
+import { IPreference, AIProviderEnum } from "../definition/helper/userPreference";
 import { UserPreferenceModalEnum } from "../enum/modal/UserPreferenceModal";
 import { DividerBlock, InputBlock, TextObjectType } from "@rocket.chat/ui-kit";
 import {
@@ -45,7 +45,7 @@ export async function UserPreferenceModal({
 
     const aiProviderDropDown = elementBuilder.addDropDown(
         {
-            placeholder: "Choose AI Provider Placeholder",
+            placeholder: "Choose LLM Model",
             options: aiProviderDropDownOption,
             dispatchActionConfig: [Modals.dispatchActionConfigOnSelect],
             initialOption: aiProviderDropDownOption.find(
@@ -62,7 +62,7 @@ export async function UserPreferenceModal({
 
     blocks.push(
         blockBuilder.createInputBlock({
-            text: "Choose_AI_Provider_Label",
+            text: "Choose LLM Model",
             element: aiProviderDropDown,
             optional: false,
         })
@@ -71,8 +71,8 @@ export async function UserPreferenceModal({
     const openAIAPIKeyInput = inputElementComponent(
         {
             app,
-            placeholder: "Open_AI_API_Key_Placeholder",
-            label: "Open_AI_API_Key_Label",
+            placeholder: "Enter you LLM API Key",
+            label: "API Key",
             optional: false,
             initialValue: existingPreference?.AIconfiguration?.Llama3_2?.apiKey,
         },
@@ -85,8 +85,8 @@ export async function UserPreferenceModal({
     const openAIModelInput = inputElementComponent(
         {
             app,
-            placeholder: "Open_AI_Model_Placeholder",
-            label: "Open_AI_Model_Label",
+            placeholder: "API Endpoint for inference",
+            label: "API Endpoint",
             optional: false,
             initialValue:
                 existingPreference?.AIconfiguration?.Llama3_2?.endpoint,
@@ -125,7 +125,7 @@ export async function UserPreferenceModal({
         type: UIKitSurfaceType.MODAL,
         title: {
             type: TextObjectType.MRKDWN,
-            text: "User_Preference_Title",
+            text: "User Preference",
         },
         blocks: blocks,
         close: closeButton,
