@@ -1,3 +1,4 @@
+import { IRead } from "@rocket.chat/apps-engine/definition/accessors";
 import {
     ISetting,
     SettingType,
@@ -49,3 +50,12 @@ export const settings: ISetting[] = [
         packageValue: "",
     },
 ];
+
+export async function getAPIConfig(read: IRead) {
+    const envReader = read.getEnvironmentReader().getSettings();
+    return {
+        apiKey: await envReader.getValueById("api_key"),
+        modelType: await envReader.getValueById("model_type"),
+        apiEndpoint: await envReader.getValueById("api_endpoint"),
+    };
+}

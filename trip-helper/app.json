@@ -4,7 +4,7 @@
     "requiredApiVersion": "^1.44.0",
     "iconFile": "icon.png",
     "author": {
-        "name": "Piyush Bhatt",
+        "name": "trip-helper innovators",
         "homepage": "https://github.com/RocketChat/Apps.trip.helper",
         "support": "https://github.com/RocketChat/Apps.trip.helper/issues"
     },
@@ -12,5 +12,7 @@
     "nameSlug": "trip-helper",
     "classFile": "TripHelperApp.ts",
     "description": "Discover nearby events during your trip by uploading a photo",
-    "implements": []
+    "implements": [
+        "IPostMessageSent"
+    ]
 }
