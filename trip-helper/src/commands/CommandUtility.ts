@@ -12,6 +12,7 @@ import {
     ICommandUtilityParams,
 } from "../definition/command/ICommandUtility";
 import { CommandHandler } from "../handlers/CommandHandler";
+import { RoomInteractionStorage } from "../storage/RoomInteraction";
 
 export class CommandUtility implements ICommandUtility {
     public app: TripHelperApp;
@@ -39,6 +40,13 @@ export class CommandUtility implements ICommandUtility {
     }
 
     public async resolveCommand(): Promise<void> {
+        const roomInteractionStorage = new RoomInteractionStorage(
+			this.persis,
+			this.read.getPersistenceReader(),
+			this.sender.id,
+		);
+		roomInteractionStorage.storeInteractionRoomId(this.room.id);
+
         const handler = new CommandHandler({
             app: this.app,
             sender: this.sender,
