@@ -6,7 +6,7 @@
     "author": {
         "name": "trip-helper innovators",
         "homepage": "https://github.com/RocketChat/Apps.trip.helper",
-        "support": "https://github.com/RocketChat/Apps.trip.helper"
+        "support": "https://github.com/RocketChat/Apps.trip.helper/issues"
     },
     "name": "trip-helper",
     "nameSlug": "trip-helper",

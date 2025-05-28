@@ -4,6 +4,7 @@ import { IUser } from "@rocket.chat/apps-engine/definition/users";
 import { CreateDirectRoom } from "./CreateDirectRoom";
 import { BlockBuilder } from "../lib/BlockBuilder";
 import { OnInstallContent } from "../enum/messages";
+
 export async function sendMessage(
     modify: IModify,
     sender: IUser,
@@ -77,4 +78,24 @@ export async function sendHelperMessageOnInstall(
 
     await modify.getCreator().finish(previewBuilder);
     await modify.getCreator().finish(textMessageBuilder);
+}
+
+export async function notifyMessage(
+    room: IRoom,
+    read: IRead,
+    user: IUser,
+    message: string,
+    threadId?: string
+): Promise<void> {
+    const notifier = read.getNotifier();
+
+    const messageBuilder = notifier.getMessageBuilder();
+    messageBuilder.setText(message);
+    messageBuilder.setRoom(room);
+
+    if (threadId) {
+        messageBuilder.setThreadId(threadId);
+    }
+
+    return notifier.notifyUser(user, messageBuilder.getMessage());
 }
