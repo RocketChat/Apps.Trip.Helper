@@ -14,7 +14,6 @@ import {
 
 export class UserPreferenceStorage implements IuserPreferenceStorage {
     private userId: string;
-
     constructor(
         private readonly persistence: IPersistence,
         private readonly persistenceRead: IPersistenceRead,

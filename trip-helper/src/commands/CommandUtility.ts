@@ -12,7 +12,6 @@ import {
     ICommandUtilityParams,
 } from "../definition/command/ICommandUtility";
 import { CommandHandler } from "../handlers/CommandHandler";
-import { notifyMessage } from "../helpers/Message";
 
 export class CommandUtility implements ICommandUtility {
     public app: TripHelperApp;
@@ -55,18 +54,6 @@ export class CommandUtility implements ICommandUtility {
         switch (command) {
             case "help":
                 await handler.Help();
-                break;
-            case "config":
-                if (this.sender.roles.includes("admin")) {
-                    await handler.Configure();
-                } else {
-                    notifyMessage(
-                        this.room,
-                        this.read,
-                        this.sender,
-                        "You do not have permission to configure the app. Please contact an admin."
-                    );
-                }
                 break;
             default:
                 this.app.getLogger().error(`Unknown command: ${command}`);

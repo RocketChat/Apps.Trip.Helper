@@ -38,23 +38,23 @@ export class BlockBuilder {
     }
 
     public createInputBlock(param: InputBlockParam): InputBlock {
-		const { text, element, blockId, hint, optional } = param;
+        const { text, element, blockId, hint, optional } = param;
 
-		const inputBlock: InputBlock = {
-			type: LayoutBlockType.INPUT,
-			label: {
-				type: TextObjectType.PLAIN_TEXT,
-				text,
-			},
-			appId: this.appId,
-			element,
-			hint,
-			optional,
-			blockId,
-		};
+        const inputBlock: InputBlock = {
+            type: LayoutBlockType.INPUT,
+            label: {
+                type: TextObjectType.PLAIN_TEXT,
+                text,
+            },
+            appId: this.appId,
+            element,
+            hint,
+            optional,
+            blockId,
+        };
 
-		return inputBlock;
-	}
+        return inputBlock;
+    }
 
     public createContextBlock(param: ContextBlockParam): ContextBlock {
         const { contextElements, blockId } = param;

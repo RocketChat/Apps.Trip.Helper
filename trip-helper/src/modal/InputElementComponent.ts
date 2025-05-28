@@ -4,8 +4,8 @@ export enum Modals {
     dispatchActionConfigOnInput = "on_character_entered",
     dispatchActionConfigOnSelect = "on_item_selected",
 }
-
 import { ElementInteractionParam } from "../definition/ui-kit/Element/IElementBuilder";
+
 export function inputElementComponent(
     {
         app,
