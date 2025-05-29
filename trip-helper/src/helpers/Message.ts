@@ -4,6 +4,7 @@ import { IUser } from "@rocket.chat/apps-engine/definition/users";
 import { CreateDirectRoom } from "./CreateDirectRoom";
 import { BlockBuilder } from "../lib/BlockBuilder";
 import { OnInstallContent } from "../enum/messages";
+
 export async function sendMessage(
     modify: IModify,
     sender: IUser,

@@ -63,6 +63,8 @@ export class CommandUtility implements ICommandUtility {
             case "help":
                 await handler.Help();
                 break;
+            default:
+                this.app.getLogger().error(`Unknown command: ${command}`);
         }
     }
 }

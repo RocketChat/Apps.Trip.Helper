@@ -10,7 +10,9 @@ export async function sendHelperMessage(
     sender: IUser
 ) {
     const appUser = (await read.getUserReader().getAppUser()) as IUser;
-    const message = `Hi ${sender.name} 👋, I am your Trip Helper!`;
+    const message = `Hi ${sender.name} 👋, I am your Trip Helper!
+        • use \`/trip help\` to get help   
+        • use \`/trip config\` to configure your preferences`;
 
     const helperMessage = modify
         .getCreator()
