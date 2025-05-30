@@ -30,6 +30,7 @@ import { UserHandler } from "./src/handlers/UserHandler";
 
 import { settings } from "./src/config/settings";
 import { ElementBuilder } from "./src/lib/ElementBuilder";
+import { getPlaces } from "./src/api/places";
 
 export class TripHelperApp extends App implements IPostMessageSent {
     private blockBuilder: BlockBuilder;
@@ -95,6 +96,13 @@ export class TripHelperApp extends App implements IPostMessageSent {
         this.getLogger().info(
             `Message sent by user ${message.sender.username}: ${message.text}`
         );
+        const place = await getPlaces(http);
+        notifyMessage(
+            message.room,
+            read,
+            message.sender,
+            `places: ${place}`,
+        )
         if (
             !message.file ||
             !message.file._id ||

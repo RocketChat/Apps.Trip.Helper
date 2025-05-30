@@ -98,8 +98,18 @@ export async function sendGetLocationMessage(
             actionId: "Location_Request_Action",
         }
     );
+    const neglectLocationButton = elementBuilder.addButton(
+        {
+            text: "Not Now",
+            style: "danger",
+        },
+        {
+            blockId: "Neglect_Location_Block",
+            actionId: "Neglect_Location_Action",
+        }
+    );
     const buttonAction = blockBuilder.createActionBlock({
-        elements: [locationButton],
+        elements: [locationButton, neglectLocationButton],
     });
     const blocks = [text, buttonAction];
     const helperMessage = modify

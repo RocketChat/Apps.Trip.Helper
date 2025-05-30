@@ -6,6 +6,7 @@ import {
 } from "../helpers/Notifications";
 import { IRoom } from "@rocket.chat/apps-engine/definition/rooms";
 import { IUser } from "@rocket.chat/apps-engine/definition/users";
+import { notifyMessage } from "../helpers/Message";
 
 export class UserHandler {
     public app: TripHelperApp;
@@ -44,6 +45,14 @@ export class UserHandler {
             this.modify,
             this.room,
             this.sender
+        );
+    }
+    public async confirmLocationAccepted(): Promise<void> {
+        notifyMessage(
+            this.room,
+            this.read,
+            this.sender,
+            "Location accepted. We will use this location for your trip."
         );
     }
 }
