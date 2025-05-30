@@ -1,6 +1,9 @@
 import { IModify, IRead } from "@rocket.chat/apps-engine/definition/accessors";
 import { TripHelperApp } from "../../TripHelperApp";
-import { sendConfirmationMessage } from "../helpers/Notifications";
+import {
+    sendConfirmationMessage,
+    sendGetLocationMessage,
+} from "../helpers/Notifications";
 import { IRoom } from "@rocket.chat/apps-engine/definition/rooms";
 import { IUser } from "@rocket.chat/apps-engine/definition/users";
 
@@ -10,7 +13,7 @@ export class UserHandler {
     public modify: IModify;
     public room: IRoom;
     public sender: IUser;
-    
+
     constructor(
         app: TripHelperApp,
         read: IRead,
@@ -32,6 +35,15 @@ export class UserHandler {
             this.room,
             this.sender,
             `${message} is your current location. Do you want to use this location?`
+        );
+    }
+    public async noLocationDetected(): Promise<void> {
+        sendGetLocationMessage(
+            this.app,
+            this.read,
+            this.modify,
+            this.room,
+            this.sender
         );
     }
 }

@@ -119,7 +119,6 @@ export class TripHelperApp extends App implements IPostMessageSent {
             message,
             VALIDATION_PROMPT
         );
-
         if (isImage) {
             this.getLogger().info("Image validation successful.");
             notifyMessage(
@@ -136,6 +135,8 @@ export class TripHelperApp extends App implements IPostMessageSent {
             const parsedResponse = JSON.parse(response);
             if(parsedResponse.name != "unknown"){
                 userHandler.confirmLocation(`Your image contains a recognizable location: ${parsedResponse.name}`);
+            }else{
+                userHandler.noLocationDetected();
             }
         } else {
             this.getLogger().info("Image validation failed.");

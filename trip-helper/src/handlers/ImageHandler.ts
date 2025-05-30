@@ -2,6 +2,7 @@ import { IRead, IHttp } from "@rocket.chat/apps-engine/definition/accessors";
 import { IMessage } from "@rocket.chat/apps-engine/definition/messages";
 import { getAPIConfig } from "../config/settings";
 import { OCR_SYSTEM_PROMPT } from "../const/prompts";
+import { notifyMessage } from "../helpers/Message";
 
 export class ImageHandler {
     constructor(private readonly http: IHttp, private readonly read: IRead) {}
@@ -15,7 +16,7 @@ export class ImageHandler {
             const jsonResponse = JSON.parse(response);
             return jsonResponse.is_landmark === "true";
         } catch (error) {
-            return false;
+            return error.message;
         }
     }
 

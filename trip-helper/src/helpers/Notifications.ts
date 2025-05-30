@@ -86,7 +86,7 @@ export async function sendGetLocationMessage(
     const appUser = (await read.getUserReader().getAppUser()) as IUser;
     const { elementBuilder, blockBuilder } = app.getUtils();
     const text = blockBuilder.createSectionBlock({
-        text: "Please share your location to get the best trip suggestions.",
+        text: "No location detected. Please upload a cleared image or share your location manually.",
     });
     const locationButton = elementBuilder.addButton(
         {
@@ -98,4 +98,16 @@ export async function sendGetLocationMessage(
             actionId: "Location_Request_Action",
         }
     );
+    const buttonAction = blockBuilder.createActionBlock({
+        elements: [locationButton],
+    });
+    const blocks = [text, buttonAction];
+    const helperMessage = modify
+        .getCreator()
+        .startMessage()
+        .setRoom(room)
+        .setSender(appUser)
+        .setGroupable(false)
+        .setBlocks(blocks);
+    return read.getNotifier().notifyUser(sender, helperMessage.getMessage());
 }
