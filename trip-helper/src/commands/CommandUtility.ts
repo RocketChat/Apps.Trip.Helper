@@ -75,7 +75,7 @@ export class CommandUtility implements ICommandUtility {
                 if (subCommand) {
                     await this.storeRoomName(subCommand);
                     await handler.Create(subCommand);
-                }else{
+                } else {
                     notifyMessage(
                         this.room,
                         this.read,

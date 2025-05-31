@@ -11,7 +11,7 @@ import { IHanderParams, IHandler } from "../definition/handlers/IHandler";
 import { sendHelperMessage } from "../helpers/Notifications";
 import { OnInstallContent } from "../enum/messages";
 import { BlockBuilder } from "../lib/BlockBuilder";
-import { CreateDirectRoom } from "../helpers/CreateDirectRoom";
+import { CreatePrivateGroup } from "../helpers/CreatePrivateGroups";
 
 export class CommandHandler implements IHandler {
     public app: TripHelperApp;
@@ -38,11 +38,11 @@ export class CommandHandler implements IHandler {
     public async Help(): Promise<void> {
         sendHelperMessage(this.read, this.modify, this.room, this.sender);
     }
-    
+
     public async Create(subCommand: string): Promise<void> {
         const appUser = (await this.read.getUserReader().getAppUser()) as IUser;
         const members = [this.sender.username, appUser.username];
-        const room = await CreateDirectRoom(
+        const room = await CreatePrivateGroup(
             this.read,
             this.modify,
             members,

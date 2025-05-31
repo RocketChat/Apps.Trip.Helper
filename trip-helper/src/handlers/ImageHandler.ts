@@ -19,7 +19,10 @@ export class ImageHandler {
         }
     }
 
-    public async processImage(message: IMessage, prompt: string): Promise<string> {
+    public async processImage(
+        message: IMessage,
+        prompt: string
+    ): Promise<string> {
         const { apiKey, modelType, apiEndpoint } = await getAPIConfig(
             this.read
         );
@@ -32,7 +35,7 @@ export class ImageHandler {
             );
             return await this.sendRequest(apiEndpoint, apiKey, requestBody);
         } catch (error) {
-            return "Failed to process your image: " + error.message ;
+            return "Failed to process your image: " + error.message;
         }
     }
 

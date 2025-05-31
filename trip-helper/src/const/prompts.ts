@@ -42,4 +42,4 @@ _(Replace “Eiffel Tower, Paris, France” with the location of the place shown
 - If the landmark or location is not recognized return:
   {
     "name": "unknown"
-  }`
+  }`;

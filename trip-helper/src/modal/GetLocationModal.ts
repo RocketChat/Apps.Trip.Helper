@@ -16,7 +16,6 @@ export async function getLocationModal({
 }): Promise<IUIKitSurfaceViewParam> {
     const { elementBuilder, blockBuilder } = app.getUtils();
     const blocks: (InputBlock | DividerBlock)[] = [];
-    
 
     const locationInput = inputElementComponent(
         {
@@ -34,7 +33,7 @@ export async function getLocationModal({
             blockId: "Location_Input",
             actionId: "Location_Input_Action",
         }
-    )
+    );
     blocks.push(locationInput);
 
     const submitButton = elementBuilder.addButton(
@@ -59,7 +58,7 @@ export async function getLocationModal({
     );
 
     return {
-        id: 'location_modal',
+        id: "location_modal",
         type: UIKitSurfaceType.MODAL,
         title: {
             type: TextObjectType.MRKDWN,

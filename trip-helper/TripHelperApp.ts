@@ -71,17 +71,17 @@ export class TripHelperApp extends App implements IPostMessageSent {
         };
     }
 
-    // public async onInstall(
-    //     context: IAppInstallationContext,
-    //     read: IRead,
-    //     http: IHttp,
-    //     persistence: IPersistence,
-    //     modify: IModify
-    // ): Promise<void> {
-    //     const { user } = context;
-    //     await sendHelperMessageOnInstall(this.getID(), user, read, modify);
-    //     return;
-    // }
+    public async onInstall(
+        context: IAppInstallationContext,
+        read: IRead,
+        http: IHttp,
+        persistence: IPersistence,
+        modify: IModify
+    ): Promise<void> {
+        const { user } = context;
+        await sendHelperMessageOnInstall(this.getID(), user, read, modify);
+        return;
+    }
 
     public async executeBlockActionHandler(
         context: UIKitBlockInteractionContext,
