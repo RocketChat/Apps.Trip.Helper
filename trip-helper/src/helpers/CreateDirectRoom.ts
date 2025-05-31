@@ -5,7 +5,8 @@ import { IUser } from "@rocket.chat/apps-engine/definition/users";
 export async function CreateDirectRoom(
     read: IRead,
     modify: IModify,
-    usernames: Array<string>
+    usernames: Array<string>,
+    name?: string
 ): Promise<IRoom> {
     let room: IRoom | undefined = await read
         .getRoomReader()
@@ -14,15 +15,20 @@ export async function CreateDirectRoom(
     if (room) {
         return room;
     }
-
     const creator = (await read.getUserReader().getAppUser()) as IUser;
+
+    if (!name) {
+        name = usernames.join(", ");
+    }
 
     const newRoom = modify
         .getCreator()
         .startRoom()
-        .setType(RoomType.DIRECT_MESSAGE)
+        .setType(RoomType.PRIVATE_GROUP)
         .setCreator(creator)
-        .setMembersToBeAddedByUsernames(usernames);
+        .setMembersToBeAddedByUsernames(usernames)
+        .setSlugifiedName(name)
+        .setDisplayName(name);
 
     const roomId = await modify.getCreator().finish(newRoom);
     return (await read.getRoomReader().getById(roomId)) as IRoom;

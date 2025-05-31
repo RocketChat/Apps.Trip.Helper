@@ -19,7 +19,7 @@ export class ImageHandler {
         }
     }
 
-    public async processImage(message: IMessage, prompt: string): Promise<any> {
+    public async processImage(message: IMessage, prompt: string): Promise<string> {
         const { apiKey, modelType, apiEndpoint } = await getAPIConfig(
             this.read
         );
@@ -32,7 +32,7 @@ export class ImageHandler {
             );
             return await this.sendRequest(apiEndpoint, apiKey, requestBody);
         } catch (error) {
-            throw new Error("Failed to create OCR request: " + error.message);
+            return "Failed to process your image: " + error.message ;
         }
     }
 

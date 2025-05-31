@@ -10,7 +10,11 @@ import {
     IRead,
 } from "@rocket.chat/apps-engine/definition/accessors";
 import { App } from "@rocket.chat/apps-engine/definition/App";
-import { IAppInfo } from "@rocket.chat/apps-engine/definition/metadata";
+import {
+    IAppInfo,
+    RocketChatAssociationModel,
+    RocketChatAssociationRecord,
+} from "@rocket.chat/apps-engine/definition/metadata";
 import { TripCommand } from "./src/commands/TripCommand";
 import {
     notifyMessage,
@@ -22,15 +26,15 @@ import {
     IPostMessageSent,
 } from "@rocket.chat/apps-engine/definition/messages";
 import { ImageHandler } from "./src/handlers/ImageHandler";
-import {
-    VALIDATION_PROMPT,
-    CONFIRMATION_PROMPT,
-} from "./src/const/prompts";
+import { VALIDATION_PROMPT, CONFIRMATION_PROMPT } from "./src/const/prompts";
 import { UserHandler } from "./src/handlers/UserHandler";
 
 import { settings } from "./src/config/settings";
 import { ElementBuilder } from "./src/lib/ElementBuilder";
-import { IUIKitResponse, UIKitBlockInteractionContext } from "@rocket.chat/apps-engine/definition/uikit";
+import {
+    IUIKitResponse,
+    UIKitBlockInteractionContext,
+} from "@rocket.chat/apps-engine/definition/uikit";
 import { ExecuteBlockActionHandler } from "./src/handlers/ExecuteBlockActionHandler";
 
 export class TripHelperApp extends App implements IPostMessageSent {
@@ -67,17 +71,17 @@ export class TripHelperApp extends App implements IPostMessageSent {
         };
     }
 
-    public async onInstall(
-        context: IAppInstallationContext,
-        read: IRead,
-        http: IHttp,
-        persistence: IPersistence,
-        modify: IModify
-    ): Promise<void> {
-        const { user } = context;
-        await sendHelperMessageOnInstall(this.getID(), user, read, modify);
-        return;
-    }
+    // public async onInstall(
+    //     context: IAppInstallationContext,
+    //     read: IRead,
+    //     http: IHttp,
+    //     persistence: IPersistence,
+    //     modify: IModify
+    // ): Promise<void> {
+    //     const { user } = context;
+    //     await sendHelperMessageOnInstall(this.getID(), user, read, modify);
+    //     return;
+    // }
 
     public async executeBlockActionHandler(
         context: UIKitBlockInteractionContext,
@@ -85,7 +89,7 @@ export class TripHelperApp extends App implements IPostMessageSent {
         http: IHttp,
         persistence: IPersistence,
         modify: IModify
-    ): Promise<IUIKitResponse>{
+    ): Promise<IUIKitResponse> {
         const executeBlockActionHandler = new ExecuteBlockActionHandler(
             this,
             read,
@@ -93,8 +97,34 @@ export class TripHelperApp extends App implements IPostMessageSent {
             persistence,
             modify,
             context
-        )
+        );
         return await executeBlockActionHandler.handleActions();
+    }
+
+    public async checkPostMessageSent(
+        message: IMessage,
+        read: IRead,
+        http: IHttp
+    ): Promise<boolean> {
+        const assoc = new RocketChatAssociationRecord(
+            RocketChatAssociationModel.USER,
+            message.sender.id
+        );
+
+        const [data] = (await read
+            .getPersistenceReader()
+            .readByAssociation(assoc)) as Array<{ targetRoomSlug: string }>;
+        this.appLogger.info(
+            `Checking if message sent in room matches target room slug ${data.targetRoomSlug}`
+        );
+
+        if (!data?.targetRoomSlug) {
+            this.appLogger.warn(
+                "No target room slug found in persistence data."
+            );
+            return false;
+        }
+        return message.room.slugifiedName == data.targetRoomSlug;
     }
 
     public async executePostMessageSent(
@@ -115,13 +145,6 @@ export class TripHelperApp extends App implements IPostMessageSent {
         this.getLogger().info(
             `Message sent by user ${message.sender.username}: ${message.text}`
         );
-        // const place = await getPlaces(http);
-        // notifyMessage(
-        //     message.room,
-        //     read,
-        //     message.sender,
-        //     `places: ${place}`,
-        // )
         if (
             !message.file ||
             !message.file._id ||
@@ -159,10 +182,22 @@ export class TripHelperApp extends App implements IPostMessageSent {
                 message,
                 CONFIRMATION_PROMPT
             );
+            if (response.includes("Failed to process your image:")) {
+                notifyMessage(
+                    message.room,
+                    read,
+                    message.sender,
+                    response,
+                    message.threadId
+                );
+                return;
+            }
             const parsedResponse = JSON.parse(response);
-            if(parsedResponse.name != "unknown"){
-                userHandler.confirmLocation(`Your image contains a recognizable location: ${parsedResponse.name}`);
-            }else{
+            if (parsedResponse.name != "unknown") {
+                userHandler.confirmLocation(
+                    `Your image contains a recognizable location: ${parsedResponse.name}`
+                );
+            } else {
                 userHandler.noLocationDetected();
             }
         } else {
