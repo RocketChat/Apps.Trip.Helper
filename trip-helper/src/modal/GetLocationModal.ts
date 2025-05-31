@@ -2,13 +2,13 @@ import {
     IModify,
     IUIKitSurfaceViewParam,
 } from "@rocket.chat/apps-engine/definition/accessors";
-import { TripHelperApp } from "../../TripHelperApp";
-import { inputElementComponent } from "./InputElementComponent";
+
 import {
     ButtonStyle,
     UIKitSurfaceType,
 } from "@rocket.chat/apps-engine/definition/uikit";
 import { DividerBlock, InputBlock, TextObjectType } from "@rocket.chat/ui-kit";
+import { inputElementComponent } from "./InputElementComponent";
 
 export async function getLocationModal({
     app,
@@ -16,37 +16,26 @@ export async function getLocationModal({
 }): Promise<IUIKitSurfaceViewParam> {
     const { elementBuilder, blockBuilder } = app.getUtils();
     const blocks: (InputBlock | DividerBlock)[] = [];
-    const locationDropdown = elementBuilder.addDropdown(
+    
+
+    const locationInput = inputElementComponent(
         {
-            placeholder: "Select a location",
-            options: [
-                elementBuilder.createOptionBlockObject(
-                    "Current Location",
-                    "current_location"
-                ),
-                elementBuilder.createOptionBlockObject(
-                    "Saved Locations",
-                    "saved_locations"
-                ),
-                elementBuilder.createOptionBlockObject(
-                    "Custom Location",
-                    "custom_location"
-                ),
-            ],
+            app,
+            placeholder: "Enter your location",
+            label: "Location",
+            optional: false,
+            multiline: true,
+            minLength: 5,
+            maxLength: 100,
+            initialValue: "",
+            dispatchActionConfigOnInput: true,
         },
         {
-            blockId: "Location_Selection",
-            actionId: "Location_Selection_Action",
+            blockId: "Location_Input",
+            actionId: "Location_Input_Action",
         }
-    );
-
-    blocks.push(
-        blockBuilder.createInputBlock({
-            text: "Please select your preferred location for the trip:",
-            element: locationDropdown,
-            optional: false,
-        })
-    );
+    )
+    blocks.push(locationInput);
 
     const submitButton = elementBuilder.addButton(
         {
@@ -70,10 +59,11 @@ export async function getLocationModal({
     );
 
     return {
+        id: 'location_modal',
         type: UIKitSurfaceType.MODAL,
         title: {
             type: TextObjectType.MRKDWN,
-            text: "User Preference",
+            text: "Select your Location",
         },
         blocks: blocks,
         close: closeButton,

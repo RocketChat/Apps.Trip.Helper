@@ -38,6 +38,16 @@ export class UserHandler {
             `${message} is your current location. Do you want to use this location?`
         );
     }
+
+    public async confirmLocationAccepted(): Promise<void> {
+        notifyMessage(
+            this.room,
+            this.read,
+            this.sender,
+            "Location accepted. We will use this location for your trip."
+        );
+    }
+
     public async noLocationDetected(): Promise<void> {
         sendGetLocationMessage(
             this.app,
@@ -47,12 +57,13 @@ export class UserHandler {
             this.sender
         );
     }
-    public async confirmLocationAccepted(): Promise<void> {
+
+    public async noLocationDetectedAndNotProvided(): Promise<void> {
         notifyMessage(
             this.room,
             this.read,
             this.sender,
-            "Location accepted. We will use this location for your trip."
+            "Please share your location to proceed."
         );
     }
 }

@@ -71,6 +71,8 @@ export class ExecuteBlockActionHandler {
                     modify: this.modify,
                 });
                 return this.context.getInteractionResponder().openModalViewResponse(locationModal);
+            case "Neglect_Location_Action":
+                await userHandler.noLocationDetectedAndNotProvided();
 
             default:
                 return this.context.getInteractionResponder().successResponse();

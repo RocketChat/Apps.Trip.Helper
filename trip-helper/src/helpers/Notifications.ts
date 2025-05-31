@@ -86,7 +86,7 @@ export async function sendGetLocationMessage(
     const appUser = (await read.getUserReader().getAppUser()) as IUser;
     const { elementBuilder, blockBuilder } = app.getUtils();
     const text = blockBuilder.createSectionBlock({
-        text: "No location detected. Please upload a cleared image or share your location manually.",
+        text: "No location detected. Please upload a clear image or share your location manually.",
     });
     const locationButton = elementBuilder.addButton(
         {

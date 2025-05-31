@@ -30,7 +30,8 @@ import { UserHandler } from "./src/handlers/UserHandler";
 
 import { settings } from "./src/config/settings";
 import { ElementBuilder } from "./src/lib/ElementBuilder";
-import { getPlaces } from "./src/api/places";
+import { IUIKitResponse, UIKitBlockInteractionContext } from "@rocket.chat/apps-engine/definition/uikit";
+import { ExecuteBlockActionHandler } from "./src/handlers/ExecuteBlockActionHandler";
 
 export class TripHelperApp extends App implements IPostMessageSent {
     private blockBuilder: BlockBuilder;
@@ -78,6 +79,24 @@ export class TripHelperApp extends App implements IPostMessageSent {
         return;
     }
 
+    public async executeBlockActionHandler(
+        context: UIKitBlockInteractionContext,
+        read: IRead,
+        http: IHttp,
+        persistence: IPersistence,
+        modify: IModify
+    ): Promise<IUIKitResponse>{
+        const executeBlockActionHandler = new ExecuteBlockActionHandler(
+            this,
+            read,
+            http,
+            persistence,
+            modify,
+            context
+        )
+        return await executeBlockActionHandler.handleActions();
+    }
+
     public async executePostMessageSent(
         message: IMessage,
         read: IRead,
@@ -96,13 +115,13 @@ export class TripHelperApp extends App implements IPostMessageSent {
         this.getLogger().info(
             `Message sent by user ${message.sender.username}: ${message.text}`
         );
-        const place = await getPlaces(http);
-        notifyMessage(
-            message.room,
-            read,
-            message.sender,
-            `places: ${place}`,
-        )
+        // const place = await getPlaces(http);
+        // notifyMessage(
+        //     message.room,
+        //     read,
+        //     message.sender,
+        //     `places: ${place}`,
+        // )
         if (
             !message.file ||
             !message.file._id ||
@@ -133,7 +152,7 @@ export class TripHelperApp extends App implements IPostMessageSent {
                 message.room,
                 read,
                 message.sender,
-                "Image is valid. Processing...",
+                "Valid Image received. Processing for location detection...",
                 message.threadId
             );
             const response = await imageProcessor.processImage(
