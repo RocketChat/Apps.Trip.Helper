@@ -73,8 +73,10 @@ export class CommandUtility implements ICommandUtility {
                 break;
             case "create":
                 if (subCommand) {
-                    await this.storeRoomName(subCommand);
-                    await handler.Create(subCommand);
+                    const createRoom = await this.storeRoomName(subCommand);
+                    if (createRoom) {
+                        await handler.Create(subCommand);
+                    }
                 } else {
                     notifyMessage(
                         this.room,
@@ -86,15 +88,32 @@ export class CommandUtility implements ICommandUtility {
         }
     }
 
-    public async storeRoomName(subCommand: string) {
+    public async storeRoomName(roomName: string): Promise<boolean> {
         const assoc = new RocketChatAssociationRecord(
             RocketChatAssociationModel.USER,
             this.sender.id
         );
+
+        const existingData = (await this.read
+            .getPersistenceReader()
+            .readByAssociation(assoc)) as Array<{ tripRooms: string[] }>;
+        const roomList = existingData?.[0]?.tripRooms || [];
+        if (!roomList.includes(roomName)) {
+            roomList.push(roomName);
+        } else {
+            notifyMessage(
+                this.room,
+                this.read,
+                this.sender,
+                `Room name ${roomName} already exists.`
+            );
+            return false;
+        }
+
         await this.persis.updateByAssociation(
             assoc,
             {
-                targetRoomSlug: subCommand,
+                tripRooms: roomList,
             },
             true
         );
@@ -102,7 +121,8 @@ export class CommandUtility implements ICommandUtility {
             this.room,
             this.read,
             this.sender,
-            `Room name stored as ${subCommand} for user ${this.sender.username}`
+            `Room name stored as ${roomName} for user ${this.sender.username}`
         );
+        return true;
     }
 }

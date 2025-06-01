@@ -111,20 +111,15 @@ export class TripHelperApp extends App implements IPostMessageSent {
             message.sender.id
         );
 
-        const [data] = (await read
+        const data = (await read
             .getPersistenceReader()
-            .readByAssociation(assoc)) as Array<{ targetRoomSlug: string }>;
-        this.appLogger.info(
-            `Checking if message sent in room matches target room slug ${data.targetRoomSlug}`
-        );
+            .readByAssociation(assoc)) as Array<{ tripRooms: string[] }>;
 
-        if (!data?.targetRoomSlug) {
-            this.appLogger.warn(
-                "No target room slug found in persistence data."
-            );
+        if (!data?.[0]?.tripRooms?.length) {
             return false;
         }
-        return message.room.slugifiedName == data.targetRoomSlug;
+        const targetRooms = data[0].tripRooms;
+        return targetRooms.includes(message.room.slugifiedName);
     }
 
     public async executePostMessageSent(

@@ -10,7 +10,6 @@ import {
 } from "@rocket.chat/apps-engine/definition/uikit";
 import { RoomInteractionStorage } from "../storage/RoomInteraction";
 import { TripHelperApp } from "../../TripHelperApp";
-import { IUser } from "@rocket.chat/apps-engine/definition/users";
 import { UserHandler } from "./UserHandler";
 import { getLocationModal } from "../modal/GetLocationModal";
 
@@ -28,10 +27,7 @@ export class ExecuteBlockActionHandler {
     }
     public async handleActions(): Promise<IUIKitResponse> {
         const { actionId, user } = this.context.getInteractionData();
-        const { triggerId } = this.context.getInteractionData();
         let { room } = this.context.getInteractionData();
-        const appUser = (await this.read.getUserReader().getAppUser()) as IUser;
-
         const persistenceRead = this.read.getPersistenceReader();
 
         const roomInteractionStorage = new RoomInteractionStorage(
