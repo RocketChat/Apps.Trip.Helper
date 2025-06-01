@@ -18,6 +18,7 @@ import {
     RocketChatAssociationRecord,
 } from "@rocket.chat/apps-engine/definition/metadata";
 import { notifyMessage } from "../helpers/Message";
+import { storeRoomName } from "../storage/RoomNameStorage";
 
 export class CommandUtility implements ICommandUtility {
     public app: TripHelperApp;
@@ -73,9 +74,21 @@ export class CommandUtility implements ICommandUtility {
                 break;
             case "create":
                 if (subCommand) {
-                    const createRoom = await this.storeRoomName(subCommand);
+                    const createRoom = await storeRoomName(
+                        this.room,
+                        this.read,
+                        this.sender,
+                        this.persis,
+                        subCommand
+                    );
                     if (createRoom) {
                         await handler.Create(subCommand);
+                        notifyMessage(
+                            this.room,
+                            this.read,
+                            this.sender,
+                            `Your Trip channel ${subCommand} created successfully!, Enjoy your trip! 🚀`
+                        )
                     }
                 } else {
                     notifyMessage(
@@ -86,43 +99,5 @@ export class CommandUtility implements ICommandUtility {
                     );
                 }
         }
-    }
-
-    public async storeRoomName(roomName: string): Promise<boolean> {
-        const assoc = new RocketChatAssociationRecord(
-            RocketChatAssociationModel.USER,
-            this.sender.id
-        );
-
-        const existingData = (await this.read
-            .getPersistenceReader()
-            .readByAssociation(assoc)) as Array<{ tripRooms: string[] }>;
-        const roomList = existingData?.[0]?.tripRooms || [];
-        if (!roomList.includes(roomName)) {
-            roomList.push(roomName);
-        } else {
-            notifyMessage(
-                this.room,
-                this.read,
-                this.sender,
-                `Room name ${roomName} already exists.`
-            );
-            return false;
-        }
-
-        await this.persis.updateByAssociation(
-            assoc,
-            {
-                tripRooms: roomList,
-            },
-            true
-        );
-        notifyMessage(
-            this.room,
-            this.read,
-            this.sender,
-            `Room name stored as ${roomName} for user ${this.sender.username}`
-        );
-        return true;
     }
 }

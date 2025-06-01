@@ -35,7 +35,7 @@ export class UserHandler {
             this.modify,
             this.room,
             this.sender,
-            `${message} is your current location. Do you want to use this location?`
+            `Ohh! You are enjoying your trip at ${message}. Do you want to use this location?`,
         );
     }
 
@@ -44,7 +44,7 @@ export class UserHandler {
             this.room,
             this.read,
             this.sender,
-            "Location accepted. We will use this location for your trip."
+            "Nice, know we have your location, Just ask us anything about your trip!"
         );
     }
 
@@ -63,7 +63,7 @@ export class UserHandler {
             this.room,
             this.read,
             this.sender,
-            "Please share your location to proceed."
+            "You know we can't help you without your location, right? Please provide your location to continue."
         );
     }
 }

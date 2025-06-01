@@ -157,7 +157,7 @@ export class TripHelperApp extends App implements IPostMessageSent {
             message.room,
             read,
             message.sender,
-            "Processing your image, please wait...",
+            "Processing your image, please wait for a moment ...",
             message.threadId
         );
         const isImage = await imageProcessor.validateImage(
@@ -170,7 +170,7 @@ export class TripHelperApp extends App implements IPostMessageSent {
                 message.room,
                 read,
                 message.sender,
-                "Valid Image received. Processing for location detection...",
+                "Valid Image received. Processing your location ...",
                 message.threadId
             );
             const response = await imageProcessor.processImage(
@@ -189,9 +189,7 @@ export class TripHelperApp extends App implements IPostMessageSent {
             }
             const parsedResponse = JSON.parse(response);
             if (parsedResponse.name != "unknown") {
-                userHandler.confirmLocation(
-                    `Your image contains a recognizable location: ${parsedResponse.name}`
-                );
+                userHandler.confirmLocation(parsedResponse.name);
             } else {
                 userHandler.noLocationDetected();
             }
@@ -201,7 +199,7 @@ export class TripHelperApp extends App implements IPostMessageSent {
                 message.room,
                 read,
                 message.sender,
-                "The uploaded file is not a valid image. Please try again with a different image.",
+                "The uploaded image is not valid. Please try again with a different image.",
                 message.threadId
             );
             return;
