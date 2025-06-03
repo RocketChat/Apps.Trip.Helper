@@ -11,7 +11,7 @@ import {
 import { RoomInteractionStorage } from "../storage/RoomInteraction";
 import { TripHelperApp } from "../../TripHelperApp";
 import { UserHandler } from "./UserHandler";
-import { getLocationModal } from "../modal/GetLocationModal";
+import { getUserLocationIP } from "../helpers/Notifications";
 
 export class ExecuteBlockActionHandler {
     private context: UIKitBlockInteractionContext;
@@ -62,13 +62,7 @@ export class ExecuteBlockActionHandler {
                 await userHandler.noLocationDetected();
                 return this.context.getInteractionResponder().successResponse();
             case "Location_Request_Action":
-                const locationModal = await getLocationModal({
-                    app: this.app,
-                    modify: this.modify,
-                });
-                return this.context
-                    .getInteractionResponder()
-                    .openModalViewResponse(locationModal);
+                await getUserLocationIP(this.http, this.read, room, user);
             case "Neglect_Location_Action":
                 await userHandler.noLocationDetectedAndNotProvided();
 

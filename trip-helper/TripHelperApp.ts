@@ -141,68 +141,79 @@ export class TripHelperApp extends App implements IPostMessageSent {
             `Message sent by user ${message.sender.username}: ${message.text}`
         );
         if (
-            !message.file ||
-            !message.file._id ||
-            !message.file.type.startsWith("image/")
+            message.file &&
+            message.file._id &&
+            message.file.type.startsWith("image/")
         ) {
-            this.getLogger().info("No image file found in the message.");
-            return;
-        }
-        const appUser = await this.getAccessors()
-            .reader.getUserReader()
-            .getAppUser(this.getID());
+            const appUser = await this.getAccessors()
+                .reader.getUserReader()
+                .getAppUser(this.getID());
 
-        const imageProcessor = new ImageHandler(http, read);
-        notifyMessage(
-            message.room,
-            read,
-            message.sender,
-            "Processing your image, please wait for a moment ...",
-            message.threadId
-        );
-        const isImage = await imageProcessor.validateImage(
-            message,
-            VALIDATION_PROMPT
-        );
-        if (isImage) {
-            this.getLogger().info("Image validation successful.");
+            const imageProcessor = new ImageHandler(http, read);
             notifyMessage(
                 message.room,
                 read,
                 message.sender,
-                "Valid Image received. Processing your location ...",
+                "Processing your image, please wait for a moment ...",
                 message.threadId
             );
-            const response = await imageProcessor.processImage(
+            const isImage = await imageProcessor.validateImage(
                 message,
-                CONFIRMATION_PROMPT
+                VALIDATION_PROMPT
             );
-            if (response.includes("Failed to process your image:")) {
+            if (isImage) {
+                this.getLogger().info("Image validation successful.");
                 notifyMessage(
                     message.room,
                     read,
                     message.sender,
-                    response,
+                    "Valid Image received. Processing your location ...",
+                    message.threadId
+                );
+                const response = await imageProcessor.processImage(
+                    message,
+                    CONFIRMATION_PROMPT
+                );
+                if (response.includes("Failed to process your image:")) {
+                    notifyMessage(
+                        message.room,
+                        read,
+                        message.sender,
+                        response,
+                        message.threadId
+                    );
+                    return;
+                }
+                const parsedResponse = JSON.parse(response);
+                if (parsedResponse.name != "unknown") {
+                    userHandler.confirmLocation(parsedResponse.name);
+                } else {
+                    userHandler.noLocationDetected();
+                }
+            } else {
+                this.getLogger().info("Image validation failed.");
+                notifyMessage(
+                    message.room,
+                    read,
+                    message.sender,
+                    "The uploaded image is not valid. Please try again with a different image.",
                     message.threadId
                 );
                 return;
             }
-            const parsedResponse = JSON.parse(response);
-            if (parsedResponse.name != "unknown") {
-                userHandler.confirmLocation(parsedResponse.name);
-            } else {
-                userHandler.noLocationDetected();
-            }
-        } else {
-            this.getLogger().info("Image validation failed.");
-            notifyMessage(
-                message.room,
-                read,
-                message.sender,
-                "The uploaded image is not valid. Please try again with a different image.",
-                message.threadId
-            );
-            return;
         }
+        // 32° 18' 23.1" N 122° 36' 52.5" W
+        // else if (
+        //     message.text?.match(
+        //         /^\d{1,3}°\s\d{1,2}'\s\d{1,2}\.\d{1,2}"\s[NSEW]\s\d{1,3}°\s\d{1,2}'\s\d{1,2}\.\d{1,2}"\s[NSEW]$/
+        //     )
+        // ) {
+        //     notifyMessage(
+        //         message.room,
+        //         read,
+        //         message.sender,
+        //         `${response?.latitude}, ${response?.longitude}`,
+        //     );
+        // }
     }
 }

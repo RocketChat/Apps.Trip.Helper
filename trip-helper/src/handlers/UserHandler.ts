@@ -54,7 +54,8 @@ export class UserHandler {
             this.read,
             this.modify,
             this.room,
-            this.sender
+            this.sender,
+            "We can't detect your location automatically. Please share your location with us to continue."
         );
     }
 
