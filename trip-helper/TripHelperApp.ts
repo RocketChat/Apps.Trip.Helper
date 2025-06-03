@@ -134,7 +134,8 @@ export class TripHelperApp extends App implements IPostMessageSent {
             read,
             modify,
             message.room,
-            message.sender
+            message.sender,
+            http
         );
 
         this.getLogger().info(
@@ -203,17 +204,19 @@ export class TripHelperApp extends App implements IPostMessageSent {
             }
         }
         // 32° 18' 23.1" N 122° 36' 52.5" W
-        // else if (
-        //     message.text?.match(
-        //         /^\d{1,3}°\s\d{1,2}'\s\d{1,2}\.\d{1,2}"\s[NSEW]\s\d{1,3}°\s\d{1,2}'\s\d{1,2}\.\d{1,2}"\s[NSEW]$/
-        //     )
-        // ) {
-        //     notifyMessage(
-        //         message.room,
-        //         read,
-        //         message.sender,
-        //         `${response?.latitude}, ${response?.longitude}`,
-        //     );
-        // }
+        // 29.3875, 76.9682
+        else if (
+            message.text?.match(
+                /^\d{1,3}°\s\d{1,2}'\s\d{1,2}\.\d{1,2}"\s[NSEW]\s\d{1,3}°\s\d{1,2}'\s\d{1,2}\.\d{1,2}"\s[NSEW]$/
+            ) ||
+            message.text?.match(/^-?\d{1,3}\.\d{1,6},\s-?\d{1,3}\.\d{1,6}$/)
+        ) {
+            notifyMessage(
+                message.room,
+                read,
+                message.sender,
+                "Location detected"
+            );
+        }
     }
 }

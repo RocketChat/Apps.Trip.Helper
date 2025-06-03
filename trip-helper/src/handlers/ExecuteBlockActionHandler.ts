@@ -11,7 +11,6 @@ import {
 import { RoomInteractionStorage } from "../storage/RoomInteraction";
 import { TripHelperApp } from "../../TripHelperApp";
 import { UserHandler } from "./UserHandler";
-import { getUserLocationIP } from "../helpers/Notifications";
 
 export class ExecuteBlockActionHandler {
     private context: UIKitBlockInteractionContext;
@@ -52,7 +51,8 @@ export class ExecuteBlockActionHandler {
             this.read,
             this.modify,
             room,
-            user
+            user,
+            this.http
         );
         switch (actionId) {
             case "Location_Accept":
@@ -62,7 +62,8 @@ export class ExecuteBlockActionHandler {
                 await userHandler.noLocationDetected();
                 return this.context.getInteractionResponder().successResponse();
             case "Location_Request_Action":
-                await getUserLocationIP(this.http, this.read, room, user);
+                await userHandler.locationDetectedThroughIP();
+                return this.context.getInteractionResponder().successResponse();
             case "Neglect_Location_Action":
                 await userHandler.noLocationDetectedAndNotProvided();
 

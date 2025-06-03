@@ -147,7 +147,26 @@ export async function getUserLocationIP(
         room,
         read,
         sender,
-        "Unable to retrieve location from IP address."
+        "**Unable to retrieve location** from IP address."
     );
     return null;
+}
+
+export async function getUserAddress(
+    response: { latitude: number; longitude: number },
+    http: IHttp,
+    read: IRead,
+    room: IRoom,
+    sender: IUser
+): Promise<any> {
+    const addressResponse = await http.get(
+        `https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${response.latitude}&lon=${response.longitude}&zoom=14&addressdetails=1`
+    );
+    notifyMessage(
+        room,
+        read,
+        sender,
+        `Your Location: ${addressResponse.data.display_name}`
+    );
+    return addressResponse.data;
 }
