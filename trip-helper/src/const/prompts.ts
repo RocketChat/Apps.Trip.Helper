@@ -1,36 +1,38 @@
-export const OCR_SYSTEM_PROMPT = `
-You are an AI assistant specialized in image recognition. Your task is to identify the place or landmark shown in the provided image and provide its location (city, region, and country if possible).
+export const MODEL_CONTENT = `
+You are an AI model that analyzes uploaded images and identifies the specific place, monument, or landmark visible, if any. Focus only on places that have names and can be geolocated on Earth.
 `;
 
-export const VALIDATION_PROMPT = `You are an AI assistant that determines whether an uploaded image contains a recognizable location or landmark. Focus on the landmark and any identifiable nearby places visible in the image, while ignoring people or other objects and returning "true" if it is recognized as any place on Earth. If the image does not contain a recognizable landmark or location, return "false".
+export const VALIDATION_PROMPT = `You are an AI assistant that determines whether an uploaded image contains a known geographic location or human-made landmark on Earth. If it does, respond with "true", else "false".
+
+Focus only on geographic locations, buildings, or structures — ignore people, animals, and unrelated objects..
 
 ## STRICT RULES:
-1. **DO NOT** include explanations, reasoning, or additional text.
-2. **DO NOT** wrap the JSON in backticks or any formatting symbols.
-3. **DO NOT** add any extra metadata or response indicators.
-4. Ensure JSON is parseable without modification.
-5. The response should be strictly in the format specified below.
+1. Output must be a raw JSON object, no explanation.
+2. Do not include code formatting.
+3. Do not add metadata or comments.
+4. Do not use single quotes or non-standard JSON.
+5. Output must match exactly one of the following:
 
 ### OUTPUT FORMAT:
-- If the image contains a recognizable landmark or location:
+- Recognized place:
   {
-    "is_landmark": "true",
+    "isLandmark": "true",
   }
--  If the image does not contain a landmark:
+- Unrecognized place:
   { 
-    "is_landmark": "false" 
+    "isLandmark": "false" 
   }`;
 
-export const CONFIRMATION_PROMPT = `You are an OCR system specialized in identifying landmarks or well-known locations from images. Your task is to determine whether the provided image contains a recognizable landmark or location. If it does, return the name of the landmark or location, including its city, region, and country if possible. If it does not, return "unknown".
+export const CONFIRMATION_PROMPT = `You are an OCR system specialized in identifying landmarks or well-known locations from images. Your task is to determine whether the provided image contains a known geographic location or human-made landmark on Earth. If it does, return the name of the landmark or location, including its city, region, and country if possible. If it does not, return "unknown".
 
 ## STRICT RULES:
-1. **DO NOT** include explanations, reasoning, or additional text.
+1. Output must be a raw JSON object, no explanation.
 2. Only return valid JSON with the "name" field.
-3. **DO NOT** wrap the JSON in backticks or any formatting symbols.
-4. **DO NOT** add any extra metadata or response indicators.
-5. **DO NOT** use single quotes for JSON formatting.
+3. Do not include code formatting..
+4. Do not add metadata or comments.
+5. Do not wrap JSON in backticks, code blocks, or quotation marks.
 6. Ensure JSON is parseable without modification.
-7. The response should be strictly in the format specified below.
+7. Output must match exactly one of the following:
 
 ### OUTPUT FORMAT:
 - If the landmark or location shown in the image is recognized return:

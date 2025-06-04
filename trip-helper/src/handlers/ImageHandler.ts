@@ -1,7 +1,7 @@
 import { IRead, IHttp } from "@rocket.chat/apps-engine/definition/accessors";
 import { IMessage } from "@rocket.chat/apps-engine/definition/messages";
 import { getAPIConfig } from "../config/settings";
-import { OCR_SYSTEM_PROMPT } from "../const/prompts";
+import { MODEL_CONTENT } from "../const/prompts";
 
 export class ImageHandler {
     constructor(private readonly http: IHttp, private readonly read: IRead) {}
@@ -12,8 +12,8 @@ export class ImageHandler {
     ): Promise<boolean> {
         try {
             const response = await this.processImage(message, prompt);
-            const jsonResponse = JSON.parse(response);
-            return jsonResponse.is_landmark === "true";
+            const parsedResponse = JSON.parse(response);
+            return parsedResponse.isLandmark === "true";
         } catch (error) {
             return error.message;
         }
@@ -41,9 +41,10 @@ export class ImageHandler {
 
     private async convertImageToBase64(message: IMessage): Promise<string> {
         try {
+            const fileId = message.file?._id;
             const image = await this.read
                 .getUploadReader()
-                .getBufferById(message.file?._id!);
+                .getBufferById(fileId!);
             return image.toString("base64");
         } catch (error) {
             throw error;
@@ -60,7 +61,7 @@ export class ImageHandler {
             messages: [
                 {
                     role: "system",
-                    content: OCR_SYSTEM_PROMPT,
+                    content: MODEL_CONTENT,
                 },
                 {
                     role: "user",
