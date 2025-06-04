@@ -8,7 +8,7 @@ export async function CreatePrivateGroup(
     usernames: Array<string>,
     name: string
 ): Promise<IRoom> {
-    let room: IRoom | undefined = await read.getRoomReader().getByName(name);
+    let room: IRoom | undefined = await read.getRoomReader().getByName(`asktrip- ${name}`);
 
     if (room) {
         return room;
