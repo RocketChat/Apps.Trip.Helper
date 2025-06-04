@@ -12,6 +12,13 @@ import {
     ICommandUtilityParams,
 } from "../definition/command/ICommandUtility";
 import { CommandHandler } from "../handlers/CommandHandler";
+import { RoomInteractionStorage } from "../storage/RoomInteraction";
+import {
+    RocketChatAssociationModel,
+    RocketChatAssociationRecord,
+} from "@rocket.chat/apps-engine/definition/metadata";
+import { notifyMessage } from "../helpers/Message";
+import { storeRoomName } from "../storage/RoomNameStorage";
 
 export class CommandUtility implements ICommandUtility {
     public app: TripHelperApp;
@@ -39,6 +46,13 @@ export class CommandUtility implements ICommandUtility {
     }
 
     public async resolveCommand(): Promise<void> {
+        const roomInteractionStorage = new RoomInteractionStorage(
+            this.persis,
+            this.read.getPersistenceReader(),
+            this.sender.id
+        );
+        roomInteractionStorage.storeInteractionRoomId(this.room.id);
+
         const handler = new CommandHandler({
             app: this.app,
             sender: this.sender,
@@ -51,12 +65,39 @@ export class CommandUtility implements ICommandUtility {
             threadId: this.threadId,
         });
         const command = this.params[0].toLowerCase();
+        const subCommand = this.params[1]
+            ? this.params[1].toLowerCase()
+            : undefined;
         switch (command) {
             case "help":
                 await handler.Help();
                 break;
-            default:
-                this.app.getLogger().error(`Unknown command: ${command}`);
+            case "create":
+                if (subCommand) {
+                    const createRoom = await storeRoomName(
+                        this.room,
+                        this.read,
+                        this.sender,
+                        this.persis,
+                        subCommand
+                    );
+                    if (createRoom) {
+                        await handler.Create(subCommand);
+                        notifyMessage(
+                            this.room,
+                            this.read,
+                            this.sender,
+                            `Your Trip channel ${subCommand} created successfully!, Enjoy your trip! 🚀`
+                        )
+                    }
+                } else {
+                    notifyMessage(
+                        this.room,
+                        this.read,
+                        this.sender,
+                        "Please provide a name for the trip channel. Usage: `/trip create <channel-name>`"
+                    );
+                }
         }
     }
 }
