@@ -1,5 +1,5 @@
 {
-    "id": "bea48a66-4fff-4cbb-98d0-b543990fc72a",
+    "id": "ed92610a-4630-46be-afaa-4c44b641cdfc",
     "version": "0.0.1",
     "requiredApiVersion": "^1.44.0",
     "iconFile": "icon.png",
@@ -8,8 +8,8 @@
         "homepage": "https://github.com/RocketChat/Apps.trip.helper",
         "support": "https://github.com/RocketChat/Apps.trip.helper/issues"
     },
-    "name": "trip-helper",
-    "nameSlug": "trip-helper",
+    "name": "asktrip",
+    "nameSlug": "asktrip",
     "classFile": "TripHelperApp.ts",
     "description": "Discover nearby events during your trip by uploading a photo",
     "implements": [
