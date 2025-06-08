@@ -10,14 +10,34 @@ import {
     IRead,
 } from "@rocket.chat/apps-engine/definition/accessors";
 import { App } from "@rocket.chat/apps-engine/definition/App";
-import { IAppInfo } from "@rocket.chat/apps-engine/definition/metadata";
+import {
+    IAppInfo,
+    RocketChatAssociationModel,
+    RocketChatAssociationRecord,
+} from "@rocket.chat/apps-engine/definition/metadata";
 import { TripCommand } from "./src/commands/TripCommand";
-import { sendHelperMessageOnInstall } from "./src/helpers/Message";
+import {
+    notifyMessage,
+    sendHelperMessageOnInstall,
+} from "./src/helpers/Message";
 import { BlockBuilder } from "./src/lib/BlockBuilder";
+import {
+    IMessage,
+    IPostMessageSent,
+} from "@rocket.chat/apps-engine/definition/messages";
+import { ImageHandler } from "./src/handlers/ImageHandler";
+import { VALIDATION_PROMPT, CONFIRMATION_PROMPT } from "./src/const/prompts";
+import { UserHandler } from "./src/handlers/UserHandler";
+
 import { settings } from "./src/config/settings";
 import { ElementBuilder } from "./src/lib/ElementBuilder";
+import {
+    IUIKitResponse,
+    UIKitBlockInteractionContext,
+} from "@rocket.chat/apps-engine/definition/uikit";
+import { ExecuteBlockActionHandler } from "./src/handlers/ExecuteBlockActionHandler";
 
-export class TripHelperApp extends App {
+export class TripHelperApp extends App implements IPostMessageSent {
     private blockBuilder: BlockBuilder;
     private elementBuilder: ElementBuilder;
     private readonly appLogger: ILogger;
@@ -61,5 +81,142 @@ export class TripHelperApp extends App {
         const { user } = context;
         await sendHelperMessageOnInstall(this.getID(), user, read, modify);
         return;
+    }
+
+    public async executeBlockActionHandler(
+        context: UIKitBlockInteractionContext,
+        read: IRead,
+        http: IHttp,
+        persistence: IPersistence,
+        modify: IModify
+    ): Promise<IUIKitResponse> {
+        const executeBlockActionHandler = new ExecuteBlockActionHandler(
+            this,
+            read,
+            http,
+            persistence,
+            modify,
+            context
+        );
+        return await executeBlockActionHandler.handleActions();
+    }
+
+    public async checkPostMessageSent(
+        message: IMessage,
+        read: IRead,
+        http: IHttp
+    ): Promise<boolean> {
+        const assoc = new RocketChatAssociationRecord(
+            RocketChatAssociationModel.USER,
+            message.sender.id
+        );
+
+        const data = (await read
+            .getPersistenceReader()
+            .readByAssociation(assoc)) as Array<{ tripRooms: string[] }>;
+
+        if (!data?.[0]?.tripRooms?.length) {
+            return false;
+        }
+        const targetRooms = data[0].tripRooms;
+        return targetRooms.includes(message.room.slugifiedName);
+    }
+
+    public async executePostMessageSent(
+        message: IMessage,
+        read: IRead,
+        http: IHttp,
+        persistence: IPersistence,
+        modify: IModify
+    ): Promise<void> {
+        const userHandler = new UserHandler(
+            this,
+            read,
+            modify,
+            message.room,
+            message.sender,
+            http
+        );
+
+        this.getLogger().info(
+            `Message sent by user ${message.sender.username}: ${message.text}`
+        );
+        if (
+            message.file &&
+            message.file._id &&
+            message.file.type.startsWith("image/")
+        ) {
+            const appUser = await this.getAccessors()
+                .reader.getUserReader()
+                .getAppUser(this.getID());
+
+            const imageProcessor = new ImageHandler(http, read);
+            notifyMessage(
+                message.room,
+                read,
+                message.sender,
+                "Processing your image, please wait for a moment ...",
+                message.threadId
+            );
+            const isImage = await imageProcessor.validateImage(
+                message,
+                VALIDATION_PROMPT
+            );
+            if (isImage) {
+                this.getLogger().info("Image validation successful.");
+                notifyMessage(
+                    message.room,
+                    read,
+                    message.sender,
+                    "Valid Image received. Processing your location ...",
+                    message.threadId
+                );
+                const response = await imageProcessor.processImage(
+                    message,
+                    CONFIRMATION_PROMPT
+                );
+                if (response.includes("Failed to process your image:")) {
+                    notifyMessage(
+                        message.room,
+                        read,
+                        message.sender,
+                        response,
+                        message.threadId
+                    );
+                    return;
+                }
+                const parsedResponse = JSON.parse(response);
+                if (parsedResponse.name != "unknown") {
+                    userHandler.confirmLocation(parsedResponse.name);
+                } else {
+                    userHandler.noLocationDetected();
+                }
+            } else {
+                this.getLogger().info("Image validation failed.");
+                notifyMessage(
+                    message.room,
+                    read,
+                    message.sender,
+                    "The uploaded image is not valid. Please try again with a different image.",
+                    message.threadId
+                );
+                return;
+            }
+        }
+        // 32° 18' 23.1" N 122° 36' 52.5" W
+        // 29.3875, 76.9682
+        else if (
+            message.text?.match(
+                /^\d{1,3}°\s\d{1,2}'\s\d{1,2}\.\d{1,2}"\s[NSEW]\s\d{1,3}°\s\d{1,2}'\s\d{1,2}\.\d{1,2}"\s[NSEW]$/
+            ) ||
+            message.text?.match(/^-?\d{1,3}\.\d{1,6},\s-?\d{1,3}\.\d{1,6}$/)
+        ) {
+            notifyMessage(
+                message.room,
+                read,
+                message.sender,
+                "Location detected"
+            );
+        }
     }
 }

@@ -1,15 +1,19 @@
 import {
+    ActionsBlock,
     ContextBlock,
     InputBlock,
     LayoutBlockType,
     PreviewBlockBase,
     PreviewBlockWithThumb,
+    SectionBlock,
     TextObject,
     TextObjectType,
 } from "@rocket.chat/ui-kit";
 import { PreviewBlockParam } from "../definition/ui-kit/Block/IPreviewBlock";
 import { ContextBlockParam } from "../definition/ui-kit/Block/IContextBlock";
 import { InputBlockParam } from "../definition/ui-kit/Block/IInputBlock";
+import { SectionBlockParam } from "../definition/ui-kit/Block/ISectionBlock";
+import { ActionBlockParam } from "../definition/ui-kit/Block/IActionBlock";
 
 export class BlockBuilder {
     constructor(private readonly appId: string) {}
@@ -77,5 +81,30 @@ export class BlockBuilder {
         };
 
         return contextBlock;
+    }
+
+    public createSectionBlock(param: SectionBlockParam): SectionBlock {
+        const { text, blockId, fields, accessory } = param;
+        const sectionBlock: SectionBlock = {
+            appId: this.appId,
+            blockId,
+            type: LayoutBlockType.SECTION,
+            text: {
+                type: TextObjectType.MRKDWN,
+                text: text ? text : "",
+            },
+            accessory,
+            fields: fields ? this.createTextObjects(fields) : undefined,
+        };
+        return sectionBlock;
+    }
+
+    public createActionBlock(param: ActionBlockParam): ActionsBlock {
+        const { elements } = param;
+        const actionBlock: ActionsBlock = {
+            type: LayoutBlockType.ACTIONS,
+            elements: elements,
+        };
+        return actionBlock;
     }
 }
