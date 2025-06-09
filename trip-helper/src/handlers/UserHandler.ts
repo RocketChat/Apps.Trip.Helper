@@ -1,6 +1,7 @@
 import {
     IHttp,
     IModify,
+    IPersistence,
     IRead,
 } from "@rocket.chat/apps-engine/definition/accessors";
 import { TripHelperApp } from "../../TripHelperApp";
@@ -13,6 +14,7 @@ import {
 import { IRoom } from "@rocket.chat/apps-engine/definition/rooms";
 import { IUser } from "@rocket.chat/apps-engine/definition/users";
 import { notifyMessage } from "../helpers/Message";
+import { storeUserLocation } from "../storage/UserLocationStorage";
 
 export class UserHandler {
     public app: TripHelperApp;
@@ -21,6 +23,7 @@ export class UserHandler {
     public room: IRoom;
     public sender: IUser;
     public http: IHttp;
+    public persis: IPersistence;
 
     constructor(
         app: TripHelperApp,
@@ -28,7 +31,8 @@ export class UserHandler {
         modify: IModify,
         room: IRoom,
         sender: IUser,
-        http: IHttp
+        http: IHttp,
+        persis: IPersistence
     ) {
         this.app = app;
         this.read = read;
@@ -36,6 +40,7 @@ export class UserHandler {
         this.room = room;
         this.sender = sender;
         this.http = http;
+        this.persis = persis
     }
     public async confirmLocation(message: string): Promise<void> {
         sendConfirmationMessage(
@@ -49,12 +54,28 @@ export class UserHandler {
     }
 
     public async confirmLocationAccepted(): Promise<void> {
-        notifyMessage(
-            this.room,
-            this.read,
-            this.sender,
-            "Nice, now we have your **Location**, Just ask us anything about your **Trip**!"
-        );
+        // if (this.persis) {
+        //     await storeUserLocation(
+        //         this.read,
+        //         this.sender,
+        //         this.room,
+        //         this.persis,
+        //         location
+        //     );
+        //     notifyMessage(
+        //         this.room,
+        //         this.read,
+        //         this.sender,
+        //         "Nice, now we have your **Location**, Just ask us anything about your **Trip**!"
+        //     );
+        // } else {
+            notifyMessage(
+                this.room,
+                this.read,
+                this.sender,
+                "Unable to store your location due to a system error. Please try again later."
+            );
+    //     }
     }
 
     public async noLocationDetected(): Promise<void> {

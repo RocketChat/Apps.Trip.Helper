@@ -52,7 +52,8 @@ export class ExecuteBlockActionHandler {
             this.modify,
             room,
             user,
-            this.http
+            this.http,
+            this.persistence
         );
         switch (actionId) {
             case "Location_Accept":

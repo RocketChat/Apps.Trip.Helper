@@ -135,7 +135,8 @@ export class TripHelperApp extends App implements IPostMessageSent {
             modify,
             message.room,
             message.sender,
-            http
+            http,
+            persistence
         );
 
         this.getLogger().info(
