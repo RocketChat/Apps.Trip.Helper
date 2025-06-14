@@ -13,10 +13,7 @@ import {
 } from "../definition/command/ICommandUtility";
 import { CommandHandler } from "../handlers/CommandHandler";
 import { RoomInteractionStorage } from "../storage/RoomInteraction";
-import {
-    RocketChatAssociationModel,
-    RocketChatAssociationRecord,
-} from "@rocket.chat/apps-engine/definition/metadata";
+
 import { notifyMessage } from "../helpers/Message";
 import { storeRoomName } from "../storage/RoomNameStorage";
 
@@ -88,7 +85,7 @@ export class CommandUtility implements ICommandUtility {
                             this.read,
                             this.sender,
                             `Your Trip channel ${subCommand} created successfully!, Enjoy your trip! 🚀`
-                        )
+                        );
                     }
                 } else {
                     notifyMessage(

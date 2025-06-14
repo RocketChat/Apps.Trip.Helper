@@ -15,7 +15,7 @@ export class ImageHandler {
             const parsedResponse = JSON.parse(response);
             return parsedResponse.isLandmark === "true";
         } catch (error) {
-            return error.message;
+            return false;
         }
     }
 
@@ -26,6 +26,9 @@ export class ImageHandler {
         const { apiKey, modelType, apiEndpoint } = await getAPIConfig(
             this.read
         );
+        if (!apiKey || !modelType || !apiEndpoint) {
+            return "API configuration is missing. Please contact the admin.";
+        }
         const base64Image = await this.convertImageToBase64(message);
         try {
             const requestBody = this.createOCRRequest(
@@ -35,7 +38,7 @@ export class ImageHandler {
             );
             return await this.sendRequest(apiEndpoint, apiKey, requestBody);
         } catch (error) {
-            return "Failed to process your image: " + error.message;
+            return `Failed to process your image: ${error.message}, Contact the admin.`;
         }
     }
 
