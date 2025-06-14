@@ -19,7 +19,7 @@ export async function storeUserLocation(
 ): Promise<boolean> {
     const assoc = new RocketChatAssociationRecord(
         RocketChatAssociationModel.ROOM,
-        room.id
+        `${room.id}/${room.slugifiedName}`
     );
     await persis.updateByAssociation(
         assoc,

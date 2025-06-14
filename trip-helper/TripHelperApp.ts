@@ -36,6 +36,7 @@ import {
     UIKitBlockInteractionContext,
 } from "@rocket.chat/apps-engine/definition/uikit";
 import { ExecuteBlockActionHandler } from "./src/handlers/ExecuteBlockActionHandler";
+import { MessageHandler } from "./src/handlers/MessageHandler";
 
 export class TripHelperApp extends App implements IPostMessageSent {
     private blockBuilder: BlockBuilder;
@@ -138,6 +139,7 @@ export class TripHelperApp extends App implements IPostMessageSent {
             http,
             persistence
         );
+        const imageProcessor = new ImageHandler(http, read);
 
         this.getLogger().info(
             `Message sent by user ${message.sender.username}: ${message.text}`
@@ -151,7 +153,6 @@ export class TripHelperApp extends App implements IPostMessageSent {
                 .reader.getUserReader()
                 .getAppUser(this.getID());
 
-            const imageProcessor = new ImageHandler(http, read);
             notifyMessage(
                 message.room,
                 read,
@@ -187,10 +188,10 @@ export class TripHelperApp extends App implements IPostMessageSent {
                     return;
                 }
                 const parsedResponse = JSON.parse(response);
-                if (parsedResponse.name != "unknown") {
-                    userHandler.confirmLocation(parsedResponse.name);
+                if (parsedResponse?.name && parsedResponse.name !== "unknown") {
+                    await userHandler.confirmLocation(parsedResponse.name);
                 } else {
-                    userHandler.noLocationDetected();
+                    await userHandler.noLocationDetected();
                 }
             } else {
                 this.getLogger().info("Image validation failed.");
@@ -217,6 +218,48 @@ export class TripHelperApp extends App implements IPostMessageSent {
                 read,
                 message.sender,
                 "Location detected"
+            );
+        } else if (
+            typeof message.text === "string" &&
+            message.text.trim().length > 0
+        ) {
+            const messageHandler = new MessageHandler(http, read);
+
+            const assoc = new RocketChatAssociationRecord(
+                RocketChatAssociationModel.ROOM,
+                `${message.room.id}/${message.room.slugifiedName}`
+            );
+            const userLocation = (
+                await read.getPersistenceReader().readByAssociation(assoc)
+            )[0] as { userLocation?: string } | undefined;
+            const locationValue = userLocation?.userLocation;
+
+            if (!locationValue) {
+                notifyMessage(
+                    message.room,
+                    read,
+                    message.sender,
+                    "Please provide a valid location first."
+                );
+                return;
+            }
+            notifyMessage(
+                message.room,
+                read,
+                message.sender,
+                `${message.sender.username}, your location is set to: ${locationValue}. ${message.text}`
+            );
+            const response = await messageHandler.sendMessage(
+                message.text,
+                locationValue
+            );
+
+            notifyMessage(
+                message.room,
+                read,
+                message.sender,
+                response,
+                message.threadId
             );
         }
     }

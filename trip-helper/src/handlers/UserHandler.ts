@@ -6,7 +6,7 @@ import {
 } from "@rocket.chat/apps-engine/definition/accessors";
 import { TripHelperApp } from "../../TripHelperApp";
 import {
-    getUserAddress,
+    getUserAddressThroughIP,
     getUserLocationIP,
     sendConfirmationMessage,
     sendGetLocationMessage,
@@ -15,6 +15,11 @@ import { IRoom } from "@rocket.chat/apps-engine/definition/rooms";
 import { IUser } from "@rocket.chat/apps-engine/definition/users";
 import { notifyMessage } from "../helpers/Message";
 import { storeUserLocation } from "../storage/UserLocationStorage";
+import { UserLocationStateHandler } from "./UserLocationStateHandler";
+import {
+    RocketChatAssociationModel,
+    RocketChatAssociationRecord,
+} from "@rocket.chat/apps-engine/definition/metadata";
 
 export class UserHandler {
     public app: TripHelperApp;
@@ -40,9 +45,10 @@ export class UserHandler {
         this.room = room;
         this.sender = sender;
         this.http = http;
-        this.persis = persis
+        this.persis = persis;
     }
     public async confirmLocation(message: string): Promise<void> {
+        UserLocationStateHandler.setUserLocation(message);
         sendConfirmationMessage(
             this.app,
             this.read,
@@ -54,28 +60,32 @@ export class UserHandler {
     }
 
     public async confirmLocationAccepted(): Promise<void> {
-        // if (this.persis) {
-        //     await storeUserLocation(
-        //         this.read,
-        //         this.sender,
-        //         this.room,
-        //         this.persis,
-        //         location
-        //     );
-        //     notifyMessage(
-        //         this.room,
-        //         this.read,
-        //         this.sender,
-        //         "Nice, now we have your **Location**, Just ask us anything about your **Trip**!"
-        //     );
-        // } else {
+        const userLocation = UserLocationStateHandler.getUserLocation();
+        if (!userLocation) {
+            notifyMessage(
+                this.room,
+                this.read,
+                this.sender,
+                "No location found to confirm."
+            );
+            return;
+        }
+
+        const success = await storeUserLocation(
+            this.read,
+            this.sender,
+            this.room,
+            this.persis,
+            userLocation
+        );
+        if (!success) {
             notifyMessage(
                 this.room,
                 this.read,
                 this.sender,
                 "Unable to store your location due to a system error. Please try again later."
             );
-    //     }
+        }
     }
 
     public async noLocationDetected(): Promise<void> {
@@ -112,14 +122,38 @@ export class UserHandler {
                 this.sender,
                 `Your Location coordinates: ${response.latitude}, ${response.longitude}`
             );
-            const addResponse = getUserAddress(
+            const userLocation = await getUserAddressThroughIP(
                 response,
                 this.http,
                 this.read,
                 this.room,
                 this.sender
             );
-            // store the address in context of the user and room.
+            if (!userLocation) {
+                notifyMessage(
+                    this.room,
+                    this.read,
+                    this.sender,
+                    "No location found to confirm."
+                );
+                return;
+            }
+
+            const success = await storeUserLocation(
+                this.read,
+                this.sender,
+                this.room,
+                this.persis,
+                userLocation
+            );
+            if (!success) {
+                notifyMessage(
+                    this.room,
+                    this.read,
+                    this.sender,
+                    "Unable to store your location due to a system error. Please try again later."
+                );
+            }
         }
     }
 }
