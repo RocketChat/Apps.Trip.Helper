@@ -12,6 +12,7 @@ import { sendHelperMessage } from "../helpers/Notifications";
 import { OnInstallContent } from "../enum/messages";
 import { BlockBuilder } from "../lib/BlockBuilder";
 import { CreatePrivateGroup } from "../helpers/CreatePrivateGroups";
+import { UserReminderModal } from "../modal/ReminderModal";
 
 export class CommandHandler implements IHandler {
     public app: TripHelperApp;
@@ -90,5 +91,25 @@ export class CommandHandler implements IHandler {
 
         await this.modify.getCreator().finish(previewBuilder);
         await this.modify.getCreator().finish(textMessageBuilder);
+    }
+
+    public async reminder(): Promise<void> {
+        const modal = await UserReminderModal({
+            app: this.app,
+            modify: this.modify,
+            room: this.room,
+        });
+        if (modal instanceof Error) {
+            this.app.getLogger().error(modal.message);
+            return;
+        }
+
+        const triggerId = this.triggerId;
+        if (triggerId) {
+            await this.modify
+                .getUiController()
+                .openSurfaceView(modal, { triggerId }, this.sender);
+        }
+        return;
     }
 }

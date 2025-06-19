@@ -66,6 +66,9 @@ export class CommandUtility implements ICommandUtility {
             ? this.params[1].toLowerCase()
             : undefined;
         switch (command) {
+            case "reminder":
+                await handler.reminder();
+                break;
             case "help":
                 await handler.Help();
                 break;
@@ -95,6 +98,15 @@ export class CommandUtility implements ICommandUtility {
                         "Please provide a name for the trip channel. Usage: `/trip create <channel-name>`"
                     );
                 }
+                break;
+            default:
+                notifyMessage(
+                    this.room,
+                    this.read,
+                    this.sender,
+                    `**Invalid subcommand**: "${command}". Type \`/trip help\` for a list of available commands.`
+                );
+                break;
         }
     }
 }
