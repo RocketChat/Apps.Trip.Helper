@@ -34,9 +34,12 @@ import { ElementBuilder } from "./src/lib/ElementBuilder";
 import {
     IUIKitResponse,
     UIKitBlockInteractionContext,
+    UIKitViewSubmitInteractionContext,
 } from "@rocket.chat/apps-engine/definition/uikit";
 import { ExecuteBlockActionHandler } from "./src/handlers/ExecuteBlockActionHandler";
 import { MessageHandler } from "./src/handlers/MessageHandler";
+import { ExecuteViewSubmit } from "./src/handlers/ExecuteViewSubmit";
+import { StartupType } from "@rocket.chat/apps-engine/definition/scheduler";
 
 export class TripHelperApp extends App implements IPostMessageSent {
     private blockBuilder: BlockBuilder;
@@ -63,6 +66,50 @@ export class TripHelperApp extends App implements IPostMessageSent {
                 configurationExtend.settings.provideSetting(setting)
             )
         );
+        configurationExtend.scheduler.registerProcessors([
+            {
+                id: "trip-helper-scheduled-task",
+                processor: async (job, read, modify, http, persis) => {
+                    this.getLogger().info("Scheduled task executed:", job);
+                    const room = job.room;
+                    const user = job.user;
+                    if (room && user) {
+                        notifyMessage(
+                            room,
+                            read,
+                            user,
+                            `Scheduled task executed: ${job.message}`
+                        );
+                    } else {
+                        this.getLogger().error(
+                            "Scheduled task: Room or User not found."
+                        );
+                    }
+                },
+            },
+        ]);
+    }
+
+    public async executeViewSubmitHandler(
+        context: UIKitViewSubmitInteractionContext,
+        read: IRead,
+        http: IHttp,
+        persis: IPersistence,
+        modify: IModify
+    ) {
+        try {
+            const handler = new ExecuteViewSubmit(
+                this,
+                read,
+                persis,
+                modify,
+                context
+            );
+            return await handler.handleActions();
+        } catch (err) {
+            this.getLogger().log(`${err.message}`);
+            return context.getInteractionResponder().errorResponse();
+        }
     }
 
     public getUtils(): any {

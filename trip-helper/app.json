@@ -8,8 +8,8 @@
         "homepage": "https://github.com/RocketChat/Apps.trip.helper",
         "support": "https://github.com/RocketChat/Apps.trip.helper/issues"
     },
-    "name": "asktrip",
-    "nameSlug": "asktrip",
+    "name": "asktrip-ppo",
+    "nameSlug": "asktrip-ppo",
     "classFile": "TripHelperApp.ts",
     "description": "Discover nearby events during your trip by uploading a photo",
     "implements": [
