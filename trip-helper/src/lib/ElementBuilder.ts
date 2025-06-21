@@ -178,7 +178,7 @@ export class ElementBuilder implements IElementBuilder {
             appId: this.appId,
             blockId,
             actionId,
-            ...(dispatchActionConfig ? { dispatchActionConfig } : {}),
+            dispatchActionConfig
         };
 
         return timePicker;

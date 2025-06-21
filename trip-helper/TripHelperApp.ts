@@ -83,7 +83,7 @@ export class TripHelperApp extends App implements IPostMessageSent {
                             modify,
                             appUser,
                             room,
-                            `:loudspeaker:  You asked me to remind you about the message :loudspeaker: \n ${job.message}`
+                            `:loudspeaker:  You asked me to remind you about the message \n ${job.message}`
                         );
                     } else {
                         this.getLogger().error(
