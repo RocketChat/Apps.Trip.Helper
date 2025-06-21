@@ -50,24 +50,6 @@ export async function UserReminderModal({
         }
     );
 
-    // const reminderTimeInput = elementBuilder.createTimePicker(
-    //     {
-    //         placeholder: "HH:MM",
-    //         initialTime: time,
-    //         dispatchActionConfig: ["on_time_entered"],
-    //     },
-    //     {
-    //         blockId: "time-input-block",
-    //         actionId: "time-input-action",
-    //     }
-    // );
-
-    // const plainTextInputBlock = blockBuilder.createInputBlock({
-    //     text: 'ioi',
-    //     element: reminderTimeInput,
-    //     optional: false, // Assuming it's not optional, adjust as needed
-    // });
-
     const reminderMessageInput = inputElementComponent(
         {
             app,
