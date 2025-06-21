@@ -8,7 +8,7 @@ import {
     UIKitSurfaceType,
 } from "@rocket.chat/apps-engine/definition/uikit";
 import { DividerBlock, InputBlock, TextObjectType } from "@rocket.chat/ui-kit";
-import { inputElementComponent } from "./InputElementComponent";
+import { inputElementComponent } from "../components/InputElementComponent";
 
 export async function getLocationModal({
     app,

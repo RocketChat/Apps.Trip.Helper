@@ -3,13 +3,14 @@ import {
     IUIKitSurfaceViewParam,
 } from "@rocket.chat/apps-engine/definition/accessors";
 import { TripHelperApp } from "../../TripHelperApp";
-import { DividerBlock, InputBlock, TextObjectType } from "@rocket.chat/ui-kit";
+import { DividerBlock, InputBlock, TextObjectType, TimePickerElement } from "@rocket.chat/ui-kit";
 import {
     ButtonStyle,
     UIKitSurfaceType,
 } from "@rocket.chat/apps-engine/definition/uikit";
-import { inputElementComponent } from "./InputElementComponent";
+import { inputElementComponent } from "../components/InputElementComponent";
 import { IRoom } from "@rocket.chat/apps-engine/definition/rooms";
+import { timePickerComponent } from "../components/TimePickerComponent";
 
 export async function UserReminderModal({
     app,
@@ -30,24 +31,57 @@ export async function UserReminderModal({
         hour12: false,
     });
 
-    const reminderTimeInput = inputElementComponent(
+
+
+    // const reminderTimeInput = timePickerComponent(
+    //     {
+    //         app,
+    //         placeholder: "HH:MM",
+    //         initialValue: time,
+    //         dispatchActionConfigOnInput: true,
+    //     },
+    //     {
+    //         blockId: "time-input-block",
+    //         actionId: "time-input-action",
+    //     }
+    // );
+
+    const reminderTimeInput = timePickerComponent(
         {
             app,
             placeholder: "HH:MM",
-            label: "Remind at:",
-            optional: false,
+            label: "Remind at",
             initialValue: time,
+            dispatchActionConfig: ["on_character_entered"],
         },
         {
             blockId: "time-input-block",
             actionId: "time-input-action",
         }
     );
+    
+    // const reminderTimeInput = elementBuilder.createTimePicker(
+    //     {
+    //         placeholder: "HH:MM",
+    //         initialTime: time,
+    //         dispatchActionConfig: ["on_time_entered"],
+    //     },
+    //     {
+    //         blockId: "time-input-block",
+    //         actionId: "time-input-action",
+    //     }
+    // );
+
+    // const plainTextInputBlock = blockBuilder.createInputBlock({
+    //     text: 'ioi',
+    //     element: reminderTimeInput,
+    //     optional: false, // Assuming it's not optional, adjust as needed
+    // });
 
     const reminderMessageInput = inputElementComponent(
         {
             app,
-            placeholder: "Happy hour start! :tada: :sushi:",
+            placeholder: "Happy hour start! 🎉 🍣",
             label: "Message",
             optional: false,
             multiline: true,
