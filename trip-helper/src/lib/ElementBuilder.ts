@@ -11,6 +11,9 @@ import {
     PlainTextInputElement,
     Option,
     StaticSelectElement,
+    TimePickerElement,
+    DatePickerElement,
+    InputElementDispatchAction,
 } from "@rocket.chat/ui-kit";
 import { PlainTextInputParam } from "../definition/ui-kit/Element/IPlainTextInputElement";
 import {
@@ -145,5 +148,39 @@ export class ElementBuilder implements IElementBuilder {
             return optionObject;
         });
         return options;
+    }
+
+    public createTimePicker(
+        param: {
+            placeholder: string;
+            initialTime?: string;
+            dispatchActionConfig?: InputElementDispatchAction[];
+        },
+        interaction: ElementInteractionParam
+    ): TimePickerElement {
+        const { placeholder, initialTime, dispatchActionConfig } = param;
+        const { blockId, actionId } = interaction;
+
+        if (
+            dispatchActionConfig !== undefined &&
+            !Array.isArray(dispatchActionConfig)
+        ) {
+            throw new Error("'dispatchActionConfig' must be an array if provided.");
+        }
+
+        const timePicker: TimePickerElement = {
+            type: BlockElementType.TIME_PICKER,
+            placeholder: {
+                type: TextObjectType.PLAIN_TEXT,
+                text: placeholder,
+            },
+            initialTime,
+            appId: this.appId,
+            blockId,
+            actionId,
+            ...(dispatchActionConfig ? { dispatchActionConfig } : {}),
+        };
+
+        return timePicker;
     }
 }
