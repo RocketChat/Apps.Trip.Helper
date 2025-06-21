@@ -19,6 +19,7 @@ import { TripCommand } from "./src/commands/TripCommand";
 import {
     notifyMessage,
     sendHelperMessageOnInstall,
+    sendMessage,
 } from "./src/helpers/Message";
 import { BlockBuilder } from "./src/lib/BlockBuilder";
 import {
@@ -254,12 +255,21 @@ export class TripHelperApp extends App implements IPostMessageSent {
                 locationValue
             );
 
-            notifyMessage(
-                message.room,
-                read,
+            if(!response){
+                notifyMessage(
+                    message.room,
+                    read,
+                    message.sender,
+                    "Failed to process your message. Please try again later."
+                );
+                return;
+            }
+
+            sendMessage(
+                modify,
                 message.sender,
-                response,
-                message.threadId
+                message.room,
+                `AskTrip:- ${response}`,
             );
         }
     }
