@@ -73,17 +73,17 @@ export class TripHelperApp extends App implements IPostMessageSent {
                 processor: async (job, read, modify, http, persis) => {
                     this.getLogger().info("Scheduled task executed:", job);
                     const room = job.room;
-                    const user = job.user;
+
                     const appUser = await read
                         .getUserReader()
                         .getAppUser(this.getID());
-                        
+
                     if (room && appUser) {
                         sendMessage(
                             modify,
                             appUser,
                             room,
-                            `Scheduled task executed: ${job.message}`
+                            `:loudspeaker:  You asked me to remind you about the message :loudspeaker: \n ${job.message}`
                         );
                     } else {
                         this.getLogger().error(
