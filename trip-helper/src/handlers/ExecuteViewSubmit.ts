@@ -130,22 +130,24 @@ export class ExecuteViewSubmit {
         if (!message) {
             return { message: "Message cannot be empty" };
         }
-
-        if (!whenTime || !whenTime.match(/^\d{2}:\d{2}$/)) {
-            return { whenTime: "Invalid time format" };
+        if (!whenTime) {
+            return { whenTime: "Time cannot be empty" };
         }
-        const [hoursStr, minutesStr] = whenTime.split(":");
-        const hours = Number(hoursStr);
-        const minutes = Number(minutesStr);
-        if (
-            isNaN(hours) ||
-            isNaN(minutes) ||
-            hours < 0 ||
-            hours > 23 ||
-            minutes < 0 ||
-            minutes > 59
-        ) {
-            return { whenTime: "Invalid time" };
+        const now = new Date();
+        const [hours, minutes] = whenTime.split(":").map(Number);
+        const inputTime = new Date(now);
+        inputTime.setHours(hours, minutes, 0, 0);
+
+        if (inputTime.getTime() <= now.getTime()) {
+            const diff = now.getTime() - inputTime.getTime();
+            if (diff > 12 * 60 * 60 * 1000) {
+                // Add 1 day to inputTime
+                inputTime.setDate(inputTime.getDate() + 1);
+            }
+        }
+
+        if (inputTime.getTime() <= now.getTime()) {
+            return { whenTime: "Time must be in the future" };
         }
         return true;
     }

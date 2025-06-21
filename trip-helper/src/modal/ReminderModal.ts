@@ -3,7 +3,12 @@ import {
     IUIKitSurfaceViewParam,
 } from "@rocket.chat/apps-engine/definition/accessors";
 import { TripHelperApp } from "../../TripHelperApp";
-import { DividerBlock, InputBlock, TextObjectType, TimePickerElement } from "@rocket.chat/ui-kit";
+import {
+    DividerBlock,
+    InputBlock,
+    TextObjectType,
+    TimePickerElement,
+} from "@rocket.chat/ui-kit";
 import {
     ButtonStyle,
     UIKitSurfaceType,
@@ -31,8 +36,6 @@ export async function UserReminderModal({
         hour12: false,
     });
 
-
-
     // const reminderTimeInput = timePickerComponent(
     //     {
     //         app,
@@ -59,7 +62,7 @@ export async function UserReminderModal({
             actionId: "time-input-action",
         }
     );
-    
+
     // const reminderTimeInput = elementBuilder.createTimePicker(
     //     {
     //         placeholder: "HH:MM",
