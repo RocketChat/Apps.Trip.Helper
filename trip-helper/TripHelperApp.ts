@@ -19,6 +19,7 @@ import { TripCommand } from "./src/commands/TripCommand";
 import {
     notifyMessage,
     sendHelperMessageOnInstall,
+    sendMessage,
 } from "./src/helpers/Message";
 import { BlockBuilder } from "./src/lib/BlockBuilder";
 import {
@@ -73,11 +74,15 @@ export class TripHelperApp extends App implements IPostMessageSent {
                     this.getLogger().info("Scheduled task executed:", job);
                     const room = job.room;
                     const user = job.user;
-                    if (room && user) {
-                        notifyMessage(
+                    const appUser = await read
+                        .getUserReader()
+                        .getAppUser(this.getID());
+                        
+                    if (room && appUser) {
+                        sendMessage(
+                            modify,
+                            appUser,
                             room,
-                            read,
-                            user,
                             `Scheduled task executed: ${job.message}`
                         );
                     } else {
