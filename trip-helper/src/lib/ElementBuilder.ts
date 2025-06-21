@@ -165,7 +165,9 @@ export class ElementBuilder implements IElementBuilder {
             dispatchActionConfig !== undefined &&
             !Array.isArray(dispatchActionConfig)
         ) {
-            throw new Error("'dispatchActionConfig' must be an array if provided.");
+            throw new Error(
+                "'dispatchActionConfig' must be an array if provided."
+            );
         }
 
         const timePicker: TimePickerElement = {
@@ -178,7 +180,7 @@ export class ElementBuilder implements IElementBuilder {
             appId: this.appId,
             blockId,
             actionId,
-            dispatchActionConfig
+            dispatchActionConfig,
         };
 
         return timePicker;
