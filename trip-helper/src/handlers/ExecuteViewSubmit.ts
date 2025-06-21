@@ -92,7 +92,12 @@ export class ExecuteViewSubmit {
 
         const when = new Date();
         const [hours, minutes] = formData.whenTime.split(":").map(Number);
+
         when.setHours(hours, minutes, 0, 0);
+
+        if (when.getTime() <= Date.now()) {
+            when.setDate(when.getDate() + 1);
+        }
 
         const jobId = await this.modify.getScheduler().scheduleOnce({
             id: "trip-helper-scheduled-task",
