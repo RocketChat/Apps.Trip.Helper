@@ -222,8 +222,24 @@ export class TripHelperApp extends App implements IPostMessageSent {
             );
         } else if (
             typeof message.text === "string" &&
-            message.text.trim().length > 0
+            message.text.trim().length > 0 &&
+            !message.text.includes("AskTrip:-")
         ) {
+            const appUser = await this.getAccessors()
+                .reader.getUserReader()
+                .getAppUser(this.getID());
+
+            if (!appUser) {
+                this.getLogger().error("App user not found.");
+                notifyMessage(
+                    message.room,
+                    read,
+                    message.sender,
+                    "App user not found. Please try again later."
+                );
+                return;
+            }
+
             const messageHandler = new MessageHandler(http, read);
 
             const assoc = new RocketChatAssociationRecord(
@@ -255,7 +271,7 @@ export class TripHelperApp extends App implements IPostMessageSent {
                 locationValue
             );
 
-            if(!response){
+            if (!response) {
                 notifyMessage(
                     message.room,
                     read,
@@ -265,12 +281,7 @@ export class TripHelperApp extends App implements IPostMessageSent {
                 return;
             }
 
-            sendMessage(
-                modify,
-                message.sender,
-                message.room,
-                `AskTrip:- ${response}`,
-            );
+            sendMessage(modify, appUser, message.room, `AskTrip:- ${response}`);
         }
     }
 }
