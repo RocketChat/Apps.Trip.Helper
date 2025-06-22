@@ -152,13 +152,13 @@ export async function getUserLocationIP(
     return null;
 }
 
-export async function getUserAddress(
+export async function getUserAddressThroughIP(
     response: { latitude: number; longitude: number },
     http: IHttp,
     read: IRead,
     room: IRoom,
     sender: IUser
-): Promise<any> {
+): Promise<string | null> {
     const addressResponse = await http.get(
         `https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${response.latitude}&lon=${response.longitude}&zoom=14&addressdetails=1`
     );
@@ -168,5 +168,5 @@ export async function getUserAddress(
         sender,
         `Your Location: ${addressResponse.data.display_name}`
     );
-    return addressResponse.data;
+    return addressResponse.data.display_name;
 }

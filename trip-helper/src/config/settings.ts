@@ -52,10 +52,21 @@ export const settings: ISetting[] = [
 ];
 
 export async function getAPIConfig(read: IRead) {
-    const envReader = read.getEnvironmentReader().getSettings();
-    return {
-        apiKey: await envReader.getValueById("api_key"),
-        modelType: await envReader.getValueById("model_type"),
-        apiEndpoint: await envReader.getValueById("api_endpoint"),
-    };
+    try {
+        const envReader = read.getEnvironmentReader().getSettings();
+        const [apiKey, modelType, apiEndpoint] = await Promise.all([
+            envReader.getValueById("api_key"),
+            envReader.getValueById("model_type"),
+            envReader.getValueById("api_endpoint"),
+        ]);
+        return { apiKey, modelType, apiEndpoint };
+    } catch (error) {
+        console.error("Error fetching API config:", error);
+        return {
+            apiKey: "",
+            modelType: "",
+            apiEndpoint: "",
+            error: error instanceof Error ? error.message : String(error),
+        };
+    }
 }
