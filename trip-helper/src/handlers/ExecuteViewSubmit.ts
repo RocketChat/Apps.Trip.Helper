@@ -45,6 +45,7 @@ export class ExecuteViewSubmit {
         const roomId = await roomInteractionStorage.getInteractionRoomId();
         const room = (await this.read.getRoomReader().getById(roomId)) as IRoom;
 
+        // user-reminder-modal
         const viewId = view.id;
         switch (viewId) {
             case "user-reminder-modal":
@@ -85,6 +86,7 @@ export class ExecuteViewSubmit {
                 errors: validation,
             });
         }
+        // Create the reminder object
         const formData: IJobFormData = {
             whenTime: timeStateValue,
             message: messageStateValue,
