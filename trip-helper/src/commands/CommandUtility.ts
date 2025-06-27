@@ -16,6 +16,7 @@ import { RoomInteractionStorage } from "../storage/RoomInteraction";
 
 import { notifyMessage } from "../helpers/Message";
 import { storeRoomName } from "../storage/RoomNameStorage";
+import { sendGetLocationMessage } from "../helpers/Notifications";
 
 export class CommandUtility implements ICommandUtility {
     public app: TripHelperApp;
@@ -66,9 +67,6 @@ export class CommandUtility implements ICommandUtility {
             ? this.params[1].toLowerCase()
             : undefined;
         switch (command) {
-            case "reminder":
-                await handler.reminder();
-                break;
             case "help":
                 await handler.Help();
                 break;
@@ -98,6 +96,19 @@ export class CommandUtility implements ICommandUtility {
                         "Please provide a name for the trip channel. Usage: `/trip create <channel-name>`"
                     );
                 }
+                break;
+            case "reminder":
+                await handler.reminder();
+                break;
+            case "location":
+                sendGetLocationMessage(
+                    this.app,
+                    this.read,
+                    this.modify,
+                    this.room,
+                    this.sender,
+                    "We will use your device **IP address** to get your location"
+                );
                 break;
             default:
                 notifyMessage(
