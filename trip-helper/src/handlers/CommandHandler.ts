@@ -17,8 +17,7 @@ import {
     RocketChatAssociationRecord,
 } from "@rocket.chat/apps-engine/definition/metadata";
 import { notifyMessage } from "../helpers/Message";
-// import * as dotenv from "dotenv";
-// dotenv.config();
+import { apiKey, cx } from "../config/constants";
 
 export class CommandHandler implements IHandler {
     public app: TripHelperApp;
@@ -120,8 +119,8 @@ export class CommandHandler implements IHandler {
         }
         // https://www.googleapis.com/customsearch/v1?[parameters]
 
-        const apiKey = process.env.GOOGLE_CUSTOM_SEARCH_API_KEY;
-        const cx = process.env.GOOGLE_CUSTOM_SEARCH_ENGINE_ID;
+        // const apiKey = process.env.GOOGLE_CUSTOM_SEARCH_API_KEY;
+        // const cx = process.env.GOOGLE_CUSTOM_SEARCH_ENGINE_ID;
         const userQuery = `local information about ${locationValue} such as ongoing events, local news, and other relevant information`;
         const query = encodeURIComponent(userQuery);
 
