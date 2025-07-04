@@ -95,6 +95,9 @@ export class CommandUtility implements ICommandUtility {
                         "Please provide a name for the trip channel. Usage: `/trip create <channel-name>`"
                     );
                 }
+            case "info":
+                await handler.Info();
+                break;
         }
     }
 }
