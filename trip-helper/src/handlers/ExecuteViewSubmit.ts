@@ -146,7 +146,6 @@ export class ExecuteViewSubmit {
         if (inputTime.getTime() <= now.getTime()) {
             const diff = now.getTime() - inputTime.getTime();
             if (diff > 12 * 60 * 60 * 1000) {
-                // Add 1 day to inputTime
                 inputTime.setDate(inputTime.getDate() + 1);
             }
         }
