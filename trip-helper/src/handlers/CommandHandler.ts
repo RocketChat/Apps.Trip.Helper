@@ -17,7 +17,7 @@ import {
     RocketChatAssociationRecord,
 } from "@rocket.chat/apps-engine/definition/metadata";
 import { notifyMessage } from "../helpers/Message";
-import { apiKey, cx } from "../config/constants";
+import { getAPIConfig } from "../config/settings";
 
 export class CommandHandler implements IHandler {
     public app: TripHelperApp;
@@ -119,22 +119,24 @@ export class CommandHandler implements IHandler {
         }
         // https://www.googleapis.com/customsearch/v1?[parameters]
 
-        // const apiKey = process.env.GOOGLE_CUSTOM_SEARCH_API_KEY;
-        // const cx = process.env.GOOGLE_CUSTOM_SEARCH_ENGINE_ID;
+        const { searchEngineID, searchEngineApiKey } = await getAPIConfig(
+            this.read
+        );
+
         const userQuery = `local information about ${locationValue} such as ongoing events, local news, and other relevant information`;
         const query = encodeURIComponent(userQuery);
 
-        if (!apiKey || !cx) {
+        if (!searchEngineApiKey || !searchEngineID) {
             notifyMessage(
                 this.room,
                 this.read,
                 this.sender,
-                "Google Custom Search API key or CX is missing."
+                "Google Custom Search API key or searchEngineID is missing."
             );
             return;
         }
 
-        const url = `https://www.googleapis.com/customsearch/v1?key=${apiKey}&cx=${cx}&q=${query}`;
+        const url = `https://www.googleapis.com/customsearch/v1?key=${searchEngineApiKey}&cx=${searchEngineID}&q=${query}`;
 
         let responses = "";
         try {
