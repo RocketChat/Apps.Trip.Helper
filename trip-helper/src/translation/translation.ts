@@ -44,11 +44,3 @@ const format = (translation: string, params: object) => {
         return params[key];
     });
 };
-
-export const supportedLanguageList = [
-    Language.en,
-    Language.de,
-    Language.pt,
-    Language.pl,
-    Language.ru,
-];
