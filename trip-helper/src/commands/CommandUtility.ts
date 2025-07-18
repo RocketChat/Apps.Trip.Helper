@@ -110,6 +110,9 @@ export class CommandUtility implements ICommandUtility {
                     "We will use your device **IP address** to get your location"
                 );
                 break;
+            case "info":
+                await handler.Info();
+                break;
             default:
                 notifyMessage(
                     this.room,
@@ -117,7 +120,6 @@ export class CommandUtility implements ICommandUtility {
                     this.sender,
                     `**Invalid subcommand**: "${command}". Type \`/trip help\` for a list of available commands.`
                 );
-                break;
         }
     }
 }

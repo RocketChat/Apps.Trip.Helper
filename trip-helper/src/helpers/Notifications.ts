@@ -20,6 +20,7 @@ export async function sendHelperMessage(
         • use \`/trip create\` to create a separate trip channel
         • use \`/trip reminder\` to set a reminder for your trip
         • use \`/trip location\` to share your location with the trip channel`;
+        • use \`/trip info\` to get information about your current location`;
 
     const helperMessage = modify
         .getCreator()

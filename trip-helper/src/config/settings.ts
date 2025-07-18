@@ -8,6 +8,8 @@ export enum Settings {
     MODEL_TYPE = "model_type",
     API_KEY = "api_key",
     API_ENDPOINT = "api_endpoint",
+    SEARCH_ENGINE_ID = "search_engine_id",
+    SEARCH_ENGINE_API_KEY = "search_engine_api_key",
 }
 
 export const settings: ISetting[] = [
@@ -49,23 +51,58 @@ export const settings: ISetting[] = [
         public: true,
         packageValue: "",
     },
+    {
+        id: Settings.SEARCH_ENGINE_ID,
+        type: SettingType.STRING,
+        i18nLabel: "Google Search Engine ID",
+        i18nDescription:
+            "Google Custom Search Engine ID for local information.",
+        required: true,
+        public: true,
+        packageValue: "",
+    },
+    {
+        id: Settings.SEARCH_ENGINE_API_KEY,
+        type: SettingType.STRING,
+        i18nLabel: "Google Search Engine API Key",
+        i18nDescription: "API Key for Google Custom Search Engine.",
+        required: true,
+        public: true,
+        packageValue: "",
+    },
 ];
 
 export async function getAPIConfig(read: IRead) {
     try {
         const envReader = read.getEnvironmentReader().getSettings();
-        const [apiKey, modelType, apiEndpoint] = await Promise.all([
+        const [
+            apiKey,
+            modelType,
+            apiEndpoint,
+            searchEngineID,
+            searchEngineApiKey,
+        ] = await Promise.all([
             envReader.getValueById("api_key"),
             envReader.getValueById("model_type"),
             envReader.getValueById("api_endpoint"),
+            envReader.getValueById("search_engine_id"),
+            envReader.getValueById("search_engine_api_key"),
         ]);
-        return { apiKey, modelType, apiEndpoint };
+        return {
+            apiKey,
+            modelType,
+            apiEndpoint,
+            searchEngineID,
+            searchEngineApiKey,
+        };
     } catch (error) {
         console.error("Error fetching API config:", error);
         return {
             apiKey: "",
             modelType: "",
             apiEndpoint: "",
+            searchEngineID: "",
+            searchEngineApiKey: "",
             error: error instanceof Error ? error.message : String(error),
         };
     }
