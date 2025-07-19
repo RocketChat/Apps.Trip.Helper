@@ -33,6 +33,46 @@ export async function sendHelperMessage(
     return read.getNotifier().notifyUser(sender, helperMessage.getMessage());
 }
 
+export async function sendSetReminder(
+    app: TripHelperApp,
+    read: IRead,
+    modify: IModify,
+    room: IRoom,
+    sender: IUser,
+    message: string
+): Promise<void> {
+    const appUser = (await read.getUserReader().getAppUser()) as IUser;
+    const { elementBuilder, blockBuilder } = app.getUtils();
+    const text = blockBuilder.createSectionBlock({
+        text: message,
+    });
+
+    const sendSetReminder = elementBuilder.addButton(
+        {
+            text: "Set Reminder",
+            style: "primary",
+        },
+        {
+            blockId: "Set_Reminder_Block",
+            actionId: "Set_Reminder_Action",
+        }
+    );
+
+    const buttonAction = blockBuilder.createActionBlock({
+        elements: [sendSetReminder],
+    });
+    const blocks = [text, buttonAction];
+    const helperMessage = modify
+        .getCreator()
+        .startMessage()
+        .setRoom(room)
+        .setSender(appUser)
+        .setGroupable(false)
+        .setBlocks(blocks);
+
+    return read.getNotifier().notifyUser(sender, helperMessage.getMessage());
+}
+
 export async function sendConfirmationMessage(
     app: TripHelperApp,
     read: IRead,

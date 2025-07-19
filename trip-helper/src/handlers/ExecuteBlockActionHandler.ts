@@ -34,6 +34,7 @@ export class ExecuteBlockActionHandler {
             persistenceRead,
             user.id
         );
+        const { triggerId } = this.context.getInteractionData();
 
         const roomId = await roomInteractionStorage.getInteractionRoomId();
         const roomPersistance = await this.read.getRoomReader().getById(roomId);
@@ -53,7 +54,8 @@ export class ExecuteBlockActionHandler {
             room,
             user,
             this.http,
-            this.persistence
+            this.persistence,
+            triggerId
         );
         switch (actionId) {
             case "Location_Accept":
@@ -67,7 +69,10 @@ export class ExecuteBlockActionHandler {
                 return this.context.getInteractionResponder().successResponse();
             case "Neglect_Location_Action":
                 await userHandler.noLocationDetectedAndNotProvided();
-
+                return this.context.getInteractionResponder().successResponse();
+            case "Set_Reminder_Action":
+                await userHandler.setReminder();
+                return this.context.getInteractionResponder().successResponse();
             default:
                 return this.context.getInteractionResponder().successResponse();
         }

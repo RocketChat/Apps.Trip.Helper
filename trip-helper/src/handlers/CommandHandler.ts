@@ -8,7 +8,7 @@ import {
 } from "@rocket.chat/apps-engine/definition/accessors";
 import { TripHelperApp } from "../../TripHelperApp";
 import { IHanderParams, IHandler } from "../definition/handlers/IHandler";
-import { sendHelperMessage } from "../helpers/Notifications";
+import { sendHelperMessage, sendSetReminder } from "../helpers/Notifications";
 import { OnInstallContent } from "../enum/messages";
 import { BlockBuilder } from "../lib/BlockBuilder";
 import { CreatePrivateGroup } from "../helpers/CreatePrivateGroups";
@@ -19,6 +19,7 @@ import {
 } from "@rocket.chat/apps-engine/definition/metadata";
 import { notifyMessage } from "../helpers/Message";
 import { getAPIConfig } from "../config/settings";
+import { InfoHandler } from "./InfoHandler";
 
 export class CommandHandler implements IHandler {
     public app: TripHelperApp;
@@ -117,7 +118,8 @@ export class CommandHandler implements IHandler {
                 .openSurfaceView(modal, { triggerId }, this.sender);
         }
         return;
-}
+    }
+
     public async Info(): Promise<void> {
         const assoc = new RocketChatAssociationRecord(
             RocketChatAssociationModel.ROOM,
@@ -143,7 +145,7 @@ export class CommandHandler implements IHandler {
             this.read
         );
 
-        const userQuery = `local information about ${locationValue} such as ongoing events, local news, and other relevant information`;
+        const userQuery = `Events happening in ${locationValue} such as ongoing events`;
         const query = encodeURIComponent(userQuery);
 
         if (!searchEngineApiKey || !searchEngineID) {
@@ -158,45 +160,87 @@ export class CommandHandler implements IHandler {
 
         const url = `https://www.googleapis.com/customsearch/v1?key=${searchEngineApiKey}&cx=${searchEngineID}&q=${query}`;
 
-        let responses = "";
-        try {
-            const response = await this.http.get(url);
-            if (
-                response.data &&
-                response.data.items &&
-                response.data.items.length > 0
-            ) {
-                const items = response.data.items.slice(0, 5);
-                for (const item of items) {
-                    const topResult = item;
-                    const title = topResult.title || "No Title";
-                    const snippet = topResult.snippet || "No Description";
-                    const link = topResult.link || "";
+        const infoHandler = new InfoHandler(this.http, this.read);
 
-                    responses += `- ${title} \n${snippet}\n${link}\n\n`;
+        const currentMonthYear = "July 2025";
+
+        const categories = [
+            '"sports" OR "cricket" OR "football" OR "match" OR "tournament"',
+            '"cultural fest" OR "music festival" OR "concert" OR "stand-up comedy" OR "theatre show"',
+            '"workshop" OR "flea market" OR "food festival" OR "local market" OR "exhibition"',
+        ];
+
+        let allResults: any[] = [];
+        const seenUrls = new Set();
+
+        for (const category of categories) {
+            const query = `(${category}) events in ${locationValue} ${currentMonthYear}`;
+            const url = `https://www.googleapis.com/customsearch/v1?key=${searchEngineApiKey}&cx=${searchEngineID}&q=${encodeURIComponent(
+                query
+            )}`;
+
+            try {
+                const response = await this.http.get(url);
+                const data = response.data;
+
+                if (data.items) {
+                    for (const item of data.items) {
+                        if (allResults.length >= 5) break;
+                        if (!seenUrls.has(item.link)) {
+                            const result = {
+                                title: item.title,
+                                snippet: item.snippet,
+                                link: item.link,
+                                source: item.displayLink,
+                            };
+                            allResults.push(result);
+                            seenUrls.add(item.link);
+                        }
+                    }
                 }
-                if (responses.length > 0) {
-                    notifyMessage(
-                        this.room,
-                        this.read,
-                        this.sender,
-                        `### Here are some local information results for ${locationValue}:\n\n${responses}`
-                    );
-                }
-            } else {
+            } catch (error) {
+                console.error(
+                    `Failed to fetch for category: ${category}`,
+                    error
+                );
+            }
+        }
+
+        if (allResults.length > 0) {
+            const infoResponses = await infoHandler.sendInfo(
+                allResults,
+                locationValue
+            );
+            if (!infoResponses) {
                 notifyMessage(
                     this.room,
                     this.read,
                     this.sender,
-                    "No local information found for this location."
+                    "No relevant information found."
                 );
+                return;
             }
-        } catch (error) {
             notifyMessage(
                 this.room,
                 this.read,
                 this.sender,
-                "Error fetching local information."
+                `${infoResponses}`
+            );
+
+            sendSetReminder(
+                this.app,
+                this.read,
+                this.modify,
+                this.room,
+                this.sender,
+                `Here are some events happening in ${locationValue} this month. You can set a reminder for any of these events by clicking the button below.`
+            );
+        } else {
+            notifyMessage(
+                this.room,
+                this.read,
+                this.sender,
+                "No local information found for this location."
             );
         }
     }
