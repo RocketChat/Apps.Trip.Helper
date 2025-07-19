@@ -20,6 +20,8 @@ import {
 import { notifyMessage } from "../helpers/Message";
 import { getAPIConfig } from "../config/settings";
 import { InfoHandler } from "./InfoHandler";
+import { LOADIPHLPAPI } from "dns";
+import { LOCATION_INFORMATION } from "../const/messages";
 
 export class CommandHandler implements IHandler {
     public app: TripHelperApp;
@@ -139,7 +141,6 @@ export class CommandHandler implements IHandler {
             );
             return;
         }
-        // https://www.googleapis.com/customsearch/v1?[parameters]
 
         const { searchEngineID, searchEngineApiKey } = await getAPIConfig(
             this.read
@@ -157,18 +158,14 @@ export class CommandHandler implements IHandler {
             );
             return;
         }
-
-        const url = `https://www.googleapis.com/customsearch/v1?key=${searchEngineApiKey}&cx=${searchEngineID}&q=${query}`;
-
         const infoHandler = new InfoHandler(this.http, this.read);
 
-        const currentMonthYear = "July 2025";
+        const currentMonthYear = new Date().toLocaleString("default", {
+            month: "long",
+            year: "numeric",
+        });
 
-        const categories = [
-            '"sports" OR "cricket" OR "football" OR "match" OR "tournament"',
-            '"cultural fest" OR "music festival" OR "concert" OR "stand-up comedy" OR "theatre show"',
-            '"workshop" OR "flea market" OR "food festival" OR "local market" OR "exhibition"',
-        ];
+        const categories = LOCATION_INFORMATION.EVENTS_CATEGORIES;
 
         let allResults: any[] = [];
         const seenUrls = new Set();

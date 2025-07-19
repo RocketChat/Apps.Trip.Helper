@@ -13,3 +13,11 @@ export const APP_RESPONSES = {
     VALID_IMAGE_UPLOADED:
         "The uploaded image is valid. Processing your location now.",
 };
+
+export const LOCATION_INFORMATION = {
+    EVENTS_CATEGORIES: [
+        '"sports" OR "cricket" OR "football" OR "match" OR "tournament"',
+        '"cultural fest" OR "music festival" OR "concert" OR "stand-up comedy" OR "theatre show"',
+        '"workshop" OR "flea market" OR "food festival" OR "local market" OR "exhibition"',
+    ],
+};
