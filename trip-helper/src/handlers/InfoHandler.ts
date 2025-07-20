@@ -1,6 +1,6 @@
 import { IHttp, IRead } from "@rocket.chat/apps-engine/definition/accessors";
 import { getAPIConfig } from "../config/settings";
-import { INFORMATION_PROMPT } from "../const/prompts";
+import { INFORMATION_CONTENT_PROMPT, INFORMATION_PROMPT } from "../const/prompts";
 
 export class InfoHandler {
     constructor(private readonly http: IHttp, private readonly read: IRead) {}
@@ -48,7 +48,10 @@ export class InfoHandler {
                     content: [
                         {
                             type: "text",
-                            text: `You are a helpful assistant that transform JSON data containing event-related information from ${location} into a user-friendly summary.`,
+                            text: INFORMATION_CONTENT_PROMPT.replace(
+                                "{location}",
+                                location
+                            ),
                         },
                         {
                             type: "text",

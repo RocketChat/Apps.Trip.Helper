@@ -20,7 +20,6 @@ import {
 import { notifyMessage } from "../helpers/Message";
 import { getAPIConfig } from "../config/settings";
 import { InfoHandler } from "./InfoHandler";
-import { LOADIPHLPAPI } from "dns";
 import { LOCATION_INFORMATION } from "../const/messages";
 
 export class CommandHandler implements IHandler {
@@ -146,9 +145,6 @@ export class CommandHandler implements IHandler {
             this.read
         );
 
-        const userQuery = `Events happening in ${locationValue} such as ongoing events`;
-        const query = encodeURIComponent(userQuery);
-
         if (!searchEngineApiKey || !searchEngineID) {
             notifyMessage(
                 this.room,
@@ -169,6 +165,13 @@ export class CommandHandler implements IHandler {
 
         let allResults: any[] = [];
         const seenUrls = new Set();
+
+        notifyMessage(
+            this.room,
+            this.read,
+            this.sender,
+            `Fetching local information for ${locationValue}...`
+        );
 
         for (const category of categories) {
             const query = `(${category}) events in ${locationValue} ${currentMonthYear}`;
@@ -196,14 +199,22 @@ export class CommandHandler implements IHandler {
                     }
                 }
             } catch (error) {
-                console.error(
-                    `Failed to fetch for category: ${category}`,
-                    error
+                notifyMessage(
+                    this.room,
+                    this.read,
+                    this.sender,
+                    `Error fetching data for category "${category}": ${error.message}`
                 );
             }
         }
 
         if (allResults.length > 0) {
+            notifyMessage(
+                this.room,
+                this.read,
+                this.sender,
+                `Processing ${allResults.length} local events found in ${locationValue}...`
+            );
             const infoResponses = await infoHandler.sendInfo(
                 allResults,
                 locationValue
@@ -213,18 +224,18 @@ export class CommandHandler implements IHandler {
                     this.room,
                     this.read,
                     this.sender,
-                    "No relevant information found."
+                    "No relevant events found in your area."
                 );
                 return;
             }
-            notifyMessage(
+            await notifyMessage(
                 this.room,
                 this.read,
                 this.sender,
                 `${infoResponses}`
             );
 
-            sendSetReminder(
+            await sendSetReminder(
                 this.app,
                 this.read,
                 this.modify,
