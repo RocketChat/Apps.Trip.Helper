@@ -15,26 +15,46 @@ import {
 } from "@rocket.chat/apps-engine/definition/uikit";
 import { inputElementComponent } from "../components/InputElementComponent";
 import { IRoom } from "@rocket.chat/apps-engine/definition/rooms";
-import { timePickerComponent } from "../components/TimePickerComponent";
+import {
+    datePickerComponent,
+    timePickerComponent,
+} from "../components/TimePickerComponent";
 
 export async function UserReminderModal({
     app,
     modify,
     room,
+    eventResponse,
 }: {
     app: TripHelperApp;
     modify: IModify;
     room: IRoom;
+    eventResponse?: any[];
 }): Promise<IUIKitSurfaceViewParam> {
     const viewId = `user-reminder-modal`;
     const { elementBuilder, blockBuilder } = app.getUtils();
     const blocks: (InputBlock | DividerBlock)[] = [];
     const now = new Date();
+    const date = now.toISOString().split("T")[0];
     const time = now.toLocaleTimeString([], {
         hour: "2-digit",
         minute: "2-digit",
         hour12: false,
     });
+
+    const reminderDateInput = datePickerComponent(
+        {
+            app,
+            placeholder: "YYYY-MM-DD",
+            label: "Reminder Date",
+            initialValue: date,
+            dispatchActionConfig: ["on_character_entered"],
+        },
+        {
+            blockId: "date-input-block",
+            actionId: "date-input-action",
+        }
+    );
 
     const reminderTimeInput = timePickerComponent(
         {
@@ -64,7 +84,7 @@ export async function UserReminderModal({
         }
     );
 
-    blocks.push(reminderTimeInput, reminderMessageInput);
+    blocks.push(reminderDateInput, reminderTimeInput, reminderMessageInput);
 
     const submitButton = elementBuilder.addButton(
         {

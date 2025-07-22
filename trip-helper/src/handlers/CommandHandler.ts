@@ -8,7 +8,12 @@ import {
 } from "@rocket.chat/apps-engine/definition/accessors";
 import { TripHelperApp } from "../../TripHelperApp";
 import { IHanderParams, IHandler } from "../definition/handlers/IHandler";
-import { sendHelperMessage, sendSetReminder } from "../helpers/Notifications";
+import {
+    sendHelperMessage,
+    sendSetReminder_1,
+    sendSetReminder_2,
+    sendSetReminder_3,
+} from "../helpers/Notifications";
 import { OnInstallContent } from "../enum/messages";
 import { BlockBuilder } from "../lib/BlockBuilder";
 import { CreatePrivateGroup } from "../helpers/CreatePrivateGroups";
@@ -21,6 +26,9 @@ import { notifyMessage } from "../helpers/Message";
 import { getAPIConfig } from "../config/settings";
 import { InfoHandler } from "./InfoHandler";
 import { LOCATION_INFORMATION } from "../const/messages";
+import { EventReminderHandler } from "./EventReminderHandler";
+import { storeLocationEvents } from "../storage/EventStorage";
+import { LocationEvents } from "../definition/handlers/EventHandler";
 
 export class CommandHandler implements IHandler {
     public app: TripHelperApp;
@@ -155,6 +163,7 @@ export class CommandHandler implements IHandler {
             return;
         }
         const infoHandler = new InfoHandler(this.http, this.read);
+        const eventHandler = new EventReminderHandler(this.http, this.read);
 
         const currentMonthYear = new Date().toLocaleString("default", {
             month: "long",
@@ -185,7 +194,7 @@ export class CommandHandler implements IHandler {
 
                 if (data.items) {
                     for (const item of data.items) {
-                        if (allResults.length >= 5) break;
+                        if (allResults.length >= 7) break;
                         if (!seenUrls.has(item.link)) {
                             const result = {
                                 title: item.title,
@@ -228,21 +237,113 @@ export class CommandHandler implements IHandler {
                 );
                 return;
             }
-            await notifyMessage(
-                this.room,
-                this.read,
-                this.sender,
-                `${infoResponses}`
+            // await notifyMessage(
+            //     this.room,
+            //     this.read,
+            //     this.sender,
+            //     `${infoResponses}`
+            // );
+            const currentDate = new Date().toLocaleDateString("en-GB");
+
+            // const eventResponse: LocationEvents | string =
+            //     await eventHandler.sendEventDetails(infoResponses, currentDate);
+
+            const er: string = await eventHandler.sendEventDetails(
+                infoResponses,
+                currentDate,
             );
 
-            await sendSetReminder(
-                this.app,
-                this.read,
-                this.modify,
+            notifyMessage(
                 this.room,
+                this.read,
                 this.sender,
-                `Here are some events happening in ${locationValue} this month. You can set a reminder for any of these events by clicking the button below.`
+                `Here are the upcoming events in string ${er}`
+            )
+            const eventResponse: LocationEvents = JSON.parse(er);
+
+            // if (typeof eventResponse === "string") {
+            //     notifyMessage(
+            //         this.room,
+            //         this.read,
+            //         this.sender,
+            //         `${eventResponse}`
+            //     );
+            //     return;
+            // }
+
+            const success = await storeLocationEvents(
+                this.read,
+                this.sender,
+                this.room,
+                this.persis,
+                eventResponse
             );
+
+            if (!success) {
+                notifyMessage(
+                    this.room,
+                    this.read,
+                    this.sender,
+                    "Failed to store event details. Please try again later."
+                );
+                return;
+            }
+
+            // notifyMessage(
+            //     this.room,
+            //     this.read,
+            //     this.sender,
+            //     `Here are the upcoming events in ${locationValue}:\n${eventResponse
+            //         .map((event) => `${event.title} - ${event.date}`)
+            //         .join("\n")}`
+            // );
+            // const eventResponse = eventResponse.slice(0, 3);
+            if (eventResponse[0]) {
+                sendSetReminder_1(
+                    this.app,
+                    this.read,
+                    this.modify,
+                    this.room,
+                    this.sender,
+                    `events: ${eventResponse[0].title}`
+                );
+            }
+            if (eventResponse[1]) {
+                sendSetReminder_2(
+                    this.app,
+                    this.read,
+                    this.modify,
+                    this.room,
+                    this.sender,
+                    `events: ${eventResponse[1].title}`
+                );
+            }
+            if (eventResponse[2]) {
+                sendSetReminder_3(
+                    this.app,
+                    this.read,
+                    this.modify,
+                    this.room,
+                    this.sender,
+                    `events: ${eventResponse[2].title}`
+                );
+            }
+
+            // notifyMessage(
+            //     this.room,
+            //     this.read,
+            //     this.sender,
+            //     `Here are the upcoming events in ${locationValue}:\n${eventResponse}`
+            // );
+
+            // await sendSetReminder(
+            //     this.app,
+            //     this.read,
+            //     this.modify,
+            //     this.room,
+            //     this.sender,
+            //     `Here are some events happening in ${locationValue} this month. You can set a reminder for any of these events by clicking the button below.`
+            // );
         } else {
             notifyMessage(
                 this.room,

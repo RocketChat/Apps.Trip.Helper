@@ -44,3 +44,42 @@ export function timePickerComponent(
 
     return timePickerBlock;
 }
+
+export function datePickerComponent(
+    {
+        app,
+        placeholder,
+        label,
+        initialValue,
+        dispatchActionConfig,
+    }: {
+        app: TripHelperApp;
+        placeholder?: string;
+        label?: string;
+        initialValue?: string;
+        dispatchActionConfig?: InputElementDispatchAction[];
+    },
+    { blockId, actionId }: ElementInteractionParam
+) {
+    const { elementBuilder, blockBuilder } = app.getUtils();
+
+    const datePickerElement = elementBuilder.createDatePicker(
+        {
+            placeholder,
+            initialDate: initialValue,
+            dispatchActionConfig,
+        },
+        {
+            blockId,
+            actionId,
+        }
+    );
+
+    const datePickerBlock = blockBuilder.createInputBlock({
+        text: label,
+        element: datePickerElement,
+        optional: false,
+    });
+
+    return datePickerBlock;
+}

@@ -185,4 +185,40 @@ export class ElementBuilder implements IElementBuilder {
 
         return timePicker;
     }
+
+    public createDatePicker(
+        param: {
+            placeholder: string;
+            initialDate?: string;
+            dispatchActionConfig?: InputElementDispatchAction[];
+        },
+        interaction: ElementInteractionParam
+    ): DatePickerElement {
+        const { placeholder, initialDate, dispatchActionConfig } = param;
+        const { blockId, actionId } = interaction;
+
+        if (
+            dispatchActionConfig !== undefined &&
+            !Array.isArray(dispatchActionConfig)
+        ) {
+            throw new Error(
+                "'dispatchActionConfig' must be an array if provided."
+            );
+        }
+
+        const datePicker: DatePickerElement = {
+            type: BlockElementType.DATEPICKER,
+            placeholder: {
+                type: TextObjectType.PLAIN_TEXT,
+                text: placeholder,
+            },
+            initialDate,
+            appId: this.appId,
+            blockId,
+            actionId,
+            dispatchActionConfig,
+        };
+
+        return datePicker;
+    }
 }
