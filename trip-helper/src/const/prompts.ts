@@ -78,9 +78,9 @@ export const EVENTS_DATES_PROMPT = `You are an expert AI assistant specializing 
 **Future Events Only:** After determining an event's date, compare it to the "Current Date". If the event's date is in the past, discard it.
 
 **Output Format:** The final output must be a single, clean JSON array of objects. Do not add any introductory text, explanations, or markdown formatting. Each object must have this structure:
-    *   'title': The concise title or name of the event.
-    *   'date': The full date in "DD-MM-YYYY" format.
-    *   'time': The time of the event. If a specific time is mentioned, use it. If not, default to "12:00 AM".
+    *   "title": The concise title or name of the event.
+    *   "date": The full date in "YYYY-MM-DD" format.
+    *   "time": The time of the event. If a specific time is mentioned, use it. If not, default to "12:00".
 
 **Example Reasoning Process (Follow this logic):**
 *   **Input Event:** "🎵 Secret Concert: Enjoy a mysterious candlelit concert at 6:30 PM on Monday at Via Bologna."
@@ -89,14 +89,21 @@ export const EVENTS_DATES_PROMPT = `You are an expert AI assistant specializing 
     2.  Does the description have a full date? No.
     3.  Does it have a day of the week? Yes, "Monday".
     4.  The current date is Sunday, 20-07-2025. The next Monday is 21-07-2025.
-    5.  Is 21-07-2025 in the future? Yes.
-    6.  Is there a time? Yes, "6:30 PM".
-    7.  Resulting object: {"title": "Secret Concert", "date": "21-07-2025", "time": "6:30 PM"}
+    5.  Is 21-07-2025 in the future? Yes. Convert it to "2025-07-21".
+    6.  Is there a time? Yes, "6:30 PM". Convert it to "18:30".
+    7.  Resulting object: {"title": "Secret Concert", "date": "2025-07-21", "time": "18:30"}
 
 **Input Text:**
 [PASTE THE INPUT TEXT HERE]
 
-**Output:**`;
+**Output:** Your Final output must be in this format:
+[
+    {
+        "title": "Secret Concert",
+        "date": "2025-07-21",
+        "time": "18:30"
+    }
+]`;
 
 export const EVENTS_REMINDER_PROMPT = `You are a specialized, high-precision data extraction AI.
 Your task is to identify and extract all relevant event information from the provided text.
@@ -107,10 +114,10 @@ Your task is to identify and extract all relevant event information from the pro
 3.  If any required information is missing (e.g., title or date), the event should be ignored.
 4.  The output must be a clean JSON array of event objects.
 
-**Output Object Structure:** The final output must be a single, clean JSON array of objects. Do not add any introductory text, explanations, or markdown formatting. Each object must have this structure
--   'title': A concise title or name of the event.
--   'date': The full date of the event in "DD-MM-YYYY" format.
--   'time': The time of the event. If a specific time is mentioned, use it. If not, default to "12:00 AM".
+**Output Object Structure:** The final output must be a single, clean JSON array of objects. Do not add any introductory text, explanations, or markdown formatting. Each object must have this structure:
+-   "title": A concise title or name of the event.
+-   "date": The full date of the event in "YYYY-MM-DD" format.
+-   "time": The time of the event. If a specific time is mentioned, use it. If not, default to "12:00".
 
 **Example Input:**
 - "Concert on July 25th at 8:00 PM in Central Park"
@@ -120,13 +127,13 @@ Your task is to identify and extract all relevant event information from the pro
 [
     {
         "title": "Concert, central park",
-        "date": "25-07-2025",
+        "date": "2025-07-25",
         "time": "20:00",
     },
     {
         "title": "Art exhibition opening",
-        "date": "01-08-2025",
-        "time": "12:00 AM",
+        "date": "2025-08-01",
+        "time": "12:00",
     }
 ]
 `;

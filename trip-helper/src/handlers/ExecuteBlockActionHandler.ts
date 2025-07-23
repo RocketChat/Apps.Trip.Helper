@@ -73,6 +73,15 @@ export class ExecuteBlockActionHandler {
             case "Set_Reminder_Action":
                 await userHandler.setReminder();
                 return this.context.getInteractionResponder().successResponse();
+            case "Set_Reminder_Action_1":
+                await userHandler.setReminder_1();
+                return this.context.getInteractionResponder().successResponse();
+            case "Set_Reminder_Action_2":
+                await userHandler.setReminder_2();
+                return this.context.getInteractionResponder().successResponse();
+            case "Set_Reminder_Action_3":
+                await userHandler.setReminder_3();
+                return this.context.getInteractionResponder().successResponse();
             default:
                 return this.context.getInteractionResponder().successResponse();
         }

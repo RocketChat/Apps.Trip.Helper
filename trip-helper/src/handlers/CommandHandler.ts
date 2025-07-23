@@ -237,39 +237,26 @@ export class CommandHandler implements IHandler {
                 );
                 return;
             }
-            // await notifyMessage(
-            //     this.room,
-            //     this.read,
-            //     this.sender,
-            //     `${infoResponses}`
-            // );
-            const currentDate = new Date().toLocaleDateString("en-GB");
-
-            // const eventResponse: LocationEvents | string =
-            //     await eventHandler.sendEventDetails(infoResponses, currentDate);
-
-            const er: string = await eventHandler.sendEventDetails(
-                infoResponses,
-                currentDate,
-            );
-
-            notifyMessage(
+            await notifyMessage(
                 this.room,
                 this.read,
                 this.sender,
-                `Here are the upcoming events in string ${er}`
-            )
-            const eventResponse: LocationEvents = JSON.parse(er);
+                `${infoResponses}`
+            );
+            const currentDate = new Date().toLocaleDateString("en-GB");
 
-            // if (typeof eventResponse === "string") {
-            //     notifyMessage(
-            //         this.room,
-            //         this.read,
-            //         this.sender,
-            //         `${eventResponse}`
-            //     );
-            //     return;
-            // }
+            const er: string = await eventHandler.sendEventDetails(
+                infoResponses,
+                currentDate
+            );
+
+            // notifyMessage(
+            //     this.room,
+            //     this.read,
+            //     this.sender,
+            //     `Here are the upcoming events in ${locationValue}:\n${er}`
+            // );
+            const eventResponse: LocationEvents = JSON.parse(er);
 
             const success = await storeLocationEvents(
                 this.read,
@@ -289,15 +276,6 @@ export class CommandHandler implements IHandler {
                 return;
             }
 
-            // notifyMessage(
-            //     this.room,
-            //     this.read,
-            //     this.sender,
-            //     `Here are the upcoming events in ${locationValue}:\n${eventResponse
-            //         .map((event) => `${event.title} - ${event.date}`)
-            //         .join("\n")}`
-            // );
-            // const eventResponse = eventResponse.slice(0, 3);
             if (eventResponse[0]) {
                 sendSetReminder_1(
                     this.app,
@@ -305,7 +283,7 @@ export class CommandHandler implements IHandler {
                     this.modify,
                     this.room,
                     this.sender,
-                    `events: ${eventResponse[0].title}`
+                    `Here are some events happening in ${locationValue}. You can set a reminder for any of these events by clicking the button below. \n\n Would you like to set a reminder for: "${eventResponse[0].title}"?`
                 );
             }
             if (eventResponse[1]) {
@@ -315,7 +293,7 @@ export class CommandHandler implements IHandler {
                     this.modify,
                     this.room,
                     this.sender,
-                    `events: ${eventResponse[1].title}`
+                    `Would you like to set a reminder for: "${eventResponse[1].title}"?`
                 );
             }
             if (eventResponse[2]) {
@@ -325,25 +303,9 @@ export class CommandHandler implements IHandler {
                     this.modify,
                     this.room,
                     this.sender,
-                    `events: ${eventResponse[2].title}`
+                    `Would you like to set a reminder for: "${eventResponse[2].title}"?`
                 );
             }
-
-            // notifyMessage(
-            //     this.room,
-            //     this.read,
-            //     this.sender,
-            //     `Here are the upcoming events in ${locationValue}:\n${eventResponse}`
-            // );
-
-            // await sendSetReminder(
-            //     this.app,
-            //     this.read,
-            //     this.modify,
-            //     this.room,
-            //     this.sender,
-            //     `Here are some events happening in ${locationValue} this month. You can set a reminder for any of these events by clicking the button below.`
-            // );
         } else {
             notifyMessage(
                 this.room,

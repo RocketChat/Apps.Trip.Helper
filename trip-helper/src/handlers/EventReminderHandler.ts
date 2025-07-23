@@ -4,7 +4,6 @@ import {
     EVENTS_DATES_PROMPT,
     EVENTS_REMINDER_PROMPT,
 } from "../const/prompts";
-import { LocationEvents } from "../definition/handlers/EventHandler";
 
 export class EventReminderHandler {
     constructor(private readonly http: IHttp, private readonly read: IRead) {}

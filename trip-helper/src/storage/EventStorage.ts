@@ -4,7 +4,6 @@ import {
     IPersistence,
     IRead,
 } from "@rocket.chat/apps-engine/definition/accessors";
-import { notifyMessage } from "../helpers/Message";
 import {
     RocketChatAssociationModel,
     RocketChatAssociationRecord,
@@ -19,7 +18,7 @@ export async function storeLocationEvents(
 ): Promise<boolean> {
     const assoc = new RocketChatAssociationRecord(
         RocketChatAssociationModel.ROOM,
-        `${room.id}/${room.slugifiedName}/events`
+        `${room.id}/events`
     );
     await persis.updateByAssociation(
         assoc,
@@ -28,11 +27,5 @@ export async function storeLocationEvents(
         },
         true
     );
-    // notifyMessage(
-    //     room,
-    //     read,
-    //     sender,
-    //     `your event details ${eventResponse}. You can now ask for trip-related information!`
-    // );
     return true;
 }
