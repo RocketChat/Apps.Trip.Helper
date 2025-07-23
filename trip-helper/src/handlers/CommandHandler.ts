@@ -250,12 +250,6 @@ export class CommandHandler implements IHandler {
                 currentDate
             );
 
-            // notifyMessage(
-            //     this.room,
-            //     this.read,
-            //     this.sender,
-            //     `Here are the upcoming events in ${locationValue}:\n${er}`
-            // );
             const eventResponse: LocationEvents = JSON.parse(er);
 
             const success = await storeLocationEvents(
