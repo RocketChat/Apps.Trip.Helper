@@ -35,9 +35,13 @@ import { ElementBuilder } from "./src/lib/ElementBuilder";
 import {
     IUIKitResponse,
     UIKitBlockInteractionContext,
+    UIKitViewSubmitInteractionContext,
 } from "@rocket.chat/apps-engine/definition/uikit";
 import { ExecuteBlockActionHandler } from "./src/handlers/ExecuteBlockActionHandler";
 import { MessageHandler } from "./src/handlers/MessageHandler";
+import { ExecuteViewSubmit } from "./src/handlers/ExecuteViewSubmit";
+import { StartupType } from "@rocket.chat/apps-engine/definition/scheduler";
+import { APP_RESPONSES } from "./src/const/messages";
 
 export class TripHelperApp extends App implements IPostMessageSent {
     private blockBuilder: BlockBuilder;
@@ -64,6 +68,54 @@ export class TripHelperApp extends App implements IPostMessageSent {
                 configurationExtend.settings.provideSetting(setting)
             )
         );
+        configurationExtend.scheduler.registerProcessors([
+            {
+                id: "trip-helper-scheduled-task",
+                processor: async (job, read, modify, http, persis) => {
+                    this.getLogger().info("Scheduled task executed:", job);
+                    const room = job.room;
+
+                    const appUser = await read
+                        .getUserReader()
+                        .getAppUser(this.getID());
+
+                    if (room && appUser) {
+                        sendMessage(
+                            modify,
+                            appUser,
+                            room,
+                            `:loudspeaker:  You asked me to remind you about the message \n ${job.message}`
+                        );
+                    } else {
+                        this.getLogger().error(
+                            "Scheduled task: Room or User not found."
+                        );
+                    }
+                },
+            },
+        ]);
+    }
+
+    public async executeViewSubmitHandler(
+        context: UIKitViewSubmitInteractionContext,
+        read: IRead,
+        http: IHttp,
+        persis: IPersistence,
+        modify: IModify
+    ) {
+        try {
+            const handler = new ExecuteViewSubmit(
+                this,
+                read,
+                persis,
+                modify,
+                context
+            );
+            return await handler.handleActions();
+        } catch (err) {
+            this.getLogger().log(`${err.message}`);
+            return context.getInteractionResponder().errorResponse();
+        }
     }
 
     public getUtils(): any {
@@ -158,7 +210,7 @@ export class TripHelperApp extends App implements IPostMessageSent {
                 message.room,
                 read,
                 message.sender,
-                "Processing your image, please wait for a moment ...",
+                APP_RESPONSES.PROCESSING_IMAGE,
                 message.threadId
             );
             const isImage = await imageProcessor.validateImage(
@@ -166,12 +218,11 @@ export class TripHelperApp extends App implements IPostMessageSent {
                 VALIDATION_PROMPT
             );
             if (isImage) {
-                this.getLogger().info("Image validation successful.");
                 notifyMessage(
                     message.room,
                     read,
                     message.sender,
-                    "Valid Image received. Processing your location ...",
+                    APP_RESPONSES.VALID_IMAGE_UPLOADED,
                     message.threadId
                 );
                 const response = await imageProcessor.processImage(
@@ -200,7 +251,7 @@ export class TripHelperApp extends App implements IPostMessageSent {
                     message.room,
                     read,
                     message.sender,
-                    "The uploaded image is not valid. Please try again with a different image.",
+                    APP_RESPONSES.INVALID_IMAGE_UPLOADED,
                     message.threadId
                 );
                 return;
@@ -218,7 +269,7 @@ export class TripHelperApp extends App implements IPostMessageSent {
                 message.room,
                 read,
                 message.sender,
-                "Location detected"
+                APP_RESPONSES.LOCATION_DETECTED_THROUGH_IP
             );
         } else if (
             typeof message.text === "string" &&
@@ -256,7 +307,7 @@ export class TripHelperApp extends App implements IPostMessageSent {
                     message.room,
                     read,
                     message.sender,
-                    "Please provide a valid location first."
+                    APP_RESPONSES.RESPONSES_WHEN_NO_LOCATION_IS_SET
                 );
                 return;
             }

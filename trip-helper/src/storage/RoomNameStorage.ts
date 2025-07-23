@@ -33,7 +33,7 @@ export async function storeRoomName(
             room,
             read,
             sender,
-            `Room name '${roomName}' already exists. You can continue with that room.`
+            `Room name '${roomName}' already exists. Please choose a different name.`
         );
         return false;
     }

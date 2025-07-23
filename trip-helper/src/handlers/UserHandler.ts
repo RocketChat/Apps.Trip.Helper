@@ -20,6 +20,11 @@ import {
     RocketChatAssociationModel,
     RocketChatAssociationRecord,
 } from "@rocket.chat/apps-engine/definition/metadata";
+import { UserReminderModal } from "../modal/ReminderModal";
+import {
+    LocationEvent,
+    LocationEvents,
+} from "../definition/handlers/EventHandler";
 
 export class UserHandler {
     public app: TripHelperApp;
@@ -29,7 +34,7 @@ export class UserHandler {
     public sender: IUser;
     public http: IHttp;
     public persis: IPersistence;
-
+    public triggerId?: string;
     constructor(
         app: TripHelperApp,
         read: IRead,
@@ -37,7 +42,8 @@ export class UserHandler {
         room: IRoom,
         sender: IUser,
         http: IHttp,
-        persis: IPersistence
+        persis: IPersistence,
+        triggerId?: string
     ) {
         this.app = app;
         this.read = read;
@@ -46,7 +52,9 @@ export class UserHandler {
         this.sender = sender;
         this.http = http;
         this.persis = persis;
+        this.triggerId = triggerId;
     }
+
     public async confirmLocation(message: string): Promise<void> {
         UserLocationStateHandler.setUserLocation(message);
         sendConfirmationMessage(
@@ -154,6 +162,133 @@ export class UserHandler {
                     "Unable to store your location due to a system error. Please try again later."
                 );
             }
+        }
+    }
+
+    public async setReminder(): Promise<void> {
+        const modal = await UserReminderModal({
+            app: this.app,
+            modify: this.modify,
+            room: this.room,
+        });
+        if (modal instanceof Error) {
+            this.app.getLogger().error(modal.message);
+            return;
+        }
+
+        if (this.triggerId) {
+            await this.modify
+                .getUiController()
+                .openSurfaceView(
+                    modal,
+                    { triggerId: this.triggerId },
+                    this.sender
+                );
+        }
+    }
+
+    public async setReminder_1(): Promise<void> {
+        const assoc = new RocketChatAssociationRecord(
+            RocketChatAssociationModel.ROOM,
+            `${this.room.id}/events`
+        );
+        const data = (await this.read
+            .getPersistenceReader()
+            .readByAssociation(assoc)) as Array<{
+            eventResponse: LocationEvent[];
+        }>;
+
+        const eventResponse = data?.[0]?.eventResponse || [];
+        const sendData = eventResponse[0];
+
+        const modal = await UserReminderModal({
+            app: this.app,
+            modify: this.modify,
+            room: this.room,
+            eventResponse: sendData,
+        });
+        if (modal instanceof Error) {
+            this.app.getLogger().error(modal.message);
+            return;
+        }
+
+        if (this.triggerId) {
+            await this.modify
+                .getUiController()
+                .openSurfaceView(
+                    modal,
+                    { triggerId: this.triggerId },
+                    this.sender
+                );
+        }
+    }
+    public async setReminder_2(): Promise<void> {
+        const assoc = new RocketChatAssociationRecord(
+            RocketChatAssociationModel.ROOM,
+            `${this.room.id}/events`
+        );
+        const data = (await this.read
+            .getPersistenceReader()
+            .readByAssociation(assoc)) as Array<{
+            eventResponse: LocationEvent[];
+        }>;
+
+        const eventResponse = data?.[0]?.eventResponse || [];
+        const sendData = eventResponse[1];
+
+        const modal = await UserReminderModal({
+            app: this.app,
+            modify: this.modify,
+            room: this.room,
+            eventResponse: sendData,
+        });
+        if (modal instanceof Error) {
+            this.app.getLogger().error(modal.message);
+            return;
+        }
+
+        if (this.triggerId) {
+            await this.modify
+                .getUiController()
+                .openSurfaceView(
+                    modal,
+                    { triggerId: this.triggerId },
+                    this.sender
+                );
+        }
+    }
+    public async setReminder_3(): Promise<void> {
+        const assoc = new RocketChatAssociationRecord(
+            RocketChatAssociationModel.ROOM,
+            `${this.room.id}/events`
+        );
+        const data = (await this.read
+            .getPersistenceReader()
+            .readByAssociation(assoc)) as Array<{
+            eventResponse: LocationEvent[];
+        }>;
+
+        const eventResponse = data?.[0]?.eventResponse || [];
+        const sendData = eventResponse[2];
+        const modal = await UserReminderModal({
+            app: this.app,
+            modify: this.modify,
+            room: this.room,
+            eventResponse: sendData,
+        });
+        if (modal instanceof Error) {
+            this.app.getLogger().error(modal.message);
+            return;
+        }
+
+        if (this.triggerId) {
+            await this.modify
+                .getUiController()
+                .openSurfaceView(
+                    modal,
+                    { triggerId: this.triggerId },
+                    this.sender
+                );
         }
     }
 }

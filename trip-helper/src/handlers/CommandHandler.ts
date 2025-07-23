@@ -8,16 +8,27 @@ import {
 } from "@rocket.chat/apps-engine/definition/accessors";
 import { TripHelperApp } from "../../TripHelperApp";
 import { IHanderParams, IHandler } from "../definition/handlers/IHandler";
-import { sendHelperMessage } from "../helpers/Notifications";
+import {
+    sendHelperMessage,
+    sendSetReminder_1,
+    sendSetReminder_2,
+    sendSetReminder_3,
+} from "../helpers/Notifications";
 import { OnInstallContent } from "../enum/messages";
 import { BlockBuilder } from "../lib/BlockBuilder";
 import { CreatePrivateGroup } from "../helpers/CreatePrivateGroups";
+import { UserReminderModal } from "../modal/ReminderModal";
 import {
     RocketChatAssociationModel,
     RocketChatAssociationRecord,
 } from "@rocket.chat/apps-engine/definition/metadata";
 import { notifyMessage } from "../helpers/Message";
 import { getAPIConfig } from "../config/settings";
+import { InfoHandler } from "./InfoHandler";
+import { LOCATION_INFORMATION } from "../const/messages";
+import { EventReminderHandler } from "./EventReminderHandler";
+import { storeLocationEvents } from "../storage/EventStorage";
+import { LocationEvents } from "../definition/handlers/EventHandler";
 
 export class CommandHandler implements IHandler {
     public app: TripHelperApp;
@@ -98,6 +109,26 @@ export class CommandHandler implements IHandler {
         await this.modify.getCreator().finish(textMessageBuilder);
     }
 
+    public async reminder(): Promise<void> {
+        const modal = await UserReminderModal({
+            app: this.app,
+            modify: this.modify,
+            room: this.room,
+        });
+        if (modal instanceof Error) {
+            this.app.getLogger().error(modal.message);
+            return;
+        }
+
+        const triggerId = this.triggerId;
+        if (triggerId) {
+            await this.modify
+                .getUiController()
+                .openSurfaceView(modal, { triggerId }, this.sender);
+        }
+        return;
+    }
+
     public async Info(): Promise<void> {
         const assoc = new RocketChatAssociationRecord(
             RocketChatAssociationModel.ROOM,
@@ -117,14 +148,10 @@ export class CommandHandler implements IHandler {
             );
             return;
         }
-        // https://www.googleapis.com/customsearch/v1?[parameters]
 
         const { searchEngineID, searchEngineApiKey } = await getAPIConfig(
             this.read
         );
-
-        const userQuery = `local information about ${locationValue} such as ongoing events, local news, and other relevant information`;
-        const query = encodeURIComponent(userQuery);
 
         if (!searchEngineApiKey || !searchEngineID) {
             notifyMessage(
@@ -135,48 +162,150 @@ export class CommandHandler implements IHandler {
             );
             return;
         }
+        const infoHandler = new InfoHandler(this.http, this.read);
+        const eventHandler = new EventReminderHandler(this.http, this.read);
 
-        const url = `https://www.googleapis.com/customsearch/v1?key=${searchEngineApiKey}&cx=${searchEngineID}&q=${query}`;
+        const currentMonthYear = new Date().toLocaleString("default", {
+            month: "long",
+            year: "numeric",
+        });
 
-        let responses = "";
-        try {
-            const response = await this.http.get(url);
-            if (
-                response.data &&
-                response.data.items &&
-                response.data.items.length > 0
-            ) {
-                const items = response.data.items.slice(0, 5);
-                for (const item of items) {
-                    const topResult = item;
-                    const title = topResult.title || "No Title";
-                    const snippet = topResult.snippet || "No Description";
-                    const link = topResult.link || "";
+        const categories = LOCATION_INFORMATION.EVENTS_CATEGORIES;
 
-                    responses += `- ${title} \n${snippet}\n${link}\n\n`;
+        let allResults: any[] = [];
+        const seenUrls = new Set();
+
+        notifyMessage(
+            this.room,
+            this.read,
+            this.sender,
+            `Fetching local information for ${locationValue}...`
+        );
+
+        for (const category of categories) {
+            const query = `(${category}) events in ${locationValue} ${currentMonthYear}`;
+            const url = `https://www.googleapis.com/customsearch/v1?key=${searchEngineApiKey}&cx=${searchEngineID}&q=${encodeURIComponent(
+                query
+            )}`;
+
+            try {
+                const response = await this.http.get(url);
+                const data = response.data;
+
+                if (data.items) {
+                    for (const item of data.items) {
+                        if (allResults.length >= 7) break;
+                        if (!seenUrls.has(item.link)) {
+                            const result = {
+                                title: item.title,
+                                snippet: item.snippet,
+                                link: item.link,
+                                source: item.displayLink,
+                            };
+                            allResults.push(result);
+                            seenUrls.add(item.link);
+                        }
+                    }
                 }
-                if (responses.length > 0) {
-                    notifyMessage(
-                        this.room,
-                        this.read,
-                        this.sender,
-                        `### Here are some local information results for ${locationValue}:\n\n${responses}`
-                    );
-                }
-            } else {
+            } catch (error) {
                 notifyMessage(
                     this.room,
                     this.read,
                     this.sender,
-                    "No local information found for this location."
+                    `Error fetching data for category "${category}": ${error.message}`
                 );
             }
-        } catch (error) {
+        }
+
+        if (allResults.length > 0) {
             notifyMessage(
                 this.room,
                 this.read,
                 this.sender,
-                "Error fetching local information."
+                `Processing ${allResults.length} local events found in ${locationValue}...`
+            );
+            const infoResponses = await infoHandler.sendInfo(
+                allResults,
+                locationValue
+            );
+            if (!infoResponses) {
+                notifyMessage(
+                    this.room,
+                    this.read,
+                    this.sender,
+                    "No relevant events found in your area."
+                );
+                return;
+            }
+            await notifyMessage(
+                this.room,
+                this.read,
+                this.sender,
+                `${infoResponses}`
+            );
+            const currentDate = new Date().toLocaleDateString("en-GB");
+
+            const er: string = await eventHandler.sendEventDetails(
+                infoResponses,
+                currentDate
+            );
+
+            const eventResponse: LocationEvents = JSON.parse(er);
+
+            const success = await storeLocationEvents(
+                this.read,
+                this.sender,
+                this.room,
+                this.persis,
+                eventResponse
+            );
+
+            if (!success) {
+                notifyMessage(
+                    this.room,
+                    this.read,
+                    this.sender,
+                    "Failed to store event details. Please try again later."
+                );
+                return;
+            }
+
+            if (eventResponse[0]) {
+                sendSetReminder_1(
+                    this.app,
+                    this.read,
+                    this.modify,
+                    this.room,
+                    this.sender,
+                    `Here are some events happening in ${locationValue}. You can set a reminder for any of these events by clicking the button below. \n\n Would you like to set a reminder for: "${eventResponse[0].title}"?`
+                );
+            }
+            if (eventResponse[1]) {
+                sendSetReminder_2(
+                    this.app,
+                    this.read,
+                    this.modify,
+                    this.room,
+                    this.sender,
+                    `Would you like to set a reminder for: "${eventResponse[1].title}"?`
+                );
+            }
+            if (eventResponse[2]) {
+                sendSetReminder_3(
+                    this.app,
+                    this.read,
+                    this.modify,
+                    this.room,
+                    this.sender,
+                    `Would you like to set a reminder for: "${eventResponse[2].title}"?`
+                );
+            }
+        } else {
+            notifyMessage(
+                this.room,
+                this.read,
+                this.sender,
+                "No local information found for this location."
             );
         }
     }
