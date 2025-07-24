@@ -6,11 +6,13 @@ import {
 } from "@rocket.chat/apps-engine/definition/accessors";
 import { TripHelperApp } from "../../TripHelperApp";
 import {
-    getUserAddressThroughIP,
-    getUserLocationIP,
     sendConfirmationMessage,
     sendGetLocationMessage,
 } from "../helpers/Notifications";
+import {
+    getUserLocationIP,
+    getUserAddressThroughIP,
+} from "../api/GetLocationInfo";
 import { IRoom } from "@rocket.chat/apps-engine/definition/rooms";
 import { IUser } from "@rocket.chat/apps-engine/definition/users";
 import { notifyMessage } from "../helpers/Message";
@@ -112,7 +114,7 @@ export class UserHandler {
             this.room,
             this.read,
             this.sender,
-            "You know we can't help you without your location, right? Please provide your **location to continue**."
+            "You know we can't help you without your location, right? Please provide your **Location to continue**."
         );
     }
 
@@ -161,7 +163,15 @@ export class UserHandler {
                     this.sender,
                     "Unable to store your location due to a system error. Please try again later."
                 );
+                return;
             }
+
+            notifyMessage(
+                this.room,
+                this.read,
+                this.sender,
+                `Your location has been stored as: ${location}. You can now ask for trip-related information!`
+            );
         }
     }
 

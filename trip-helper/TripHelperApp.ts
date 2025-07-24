@@ -311,12 +311,12 @@ export class TripHelperApp extends App implements IPostMessageSent {
                 );
                 return;
             }
-            notifyMessage(
-                message.room,
-                read,
-                message.sender,
-                `${message.sender.username}, your location is set to: ${locationValue}. ${message.text}`
-            );
+            // notifyMessage(
+            //     message.room,
+            //     read,
+            //     message.sender,
+            //     `${message.sender.username}, your location is set to: ${locationValue}. ${message.text}`
+            // );
             const response = await messageHandler.sendMessage(
                 message.text,
                 locationValue

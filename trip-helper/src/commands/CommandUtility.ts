@@ -17,6 +17,10 @@ import { RoomInteractionStorage } from "../storage/RoomInteraction";
 import { notifyMessage } from "../helpers/Message";
 import { storeRoomName } from "../storage/RoomNameStorage";
 import { sendGetLocationMessage } from "../helpers/Notifications";
+import {
+    RocketChatAssociationModel,
+    RocketChatAssociationRecord,
+} from "@rocket.chat/apps-engine/definition/metadata";
 
 export class CommandUtility implements ICommandUtility {
     public app: TripHelperApp;
@@ -66,6 +70,16 @@ export class CommandUtility implements ICommandUtility {
         const subCommand = this.params[1]
             ? this.params[1].toLowerCase()
             : undefined;
+
+        const assoc = new RocketChatAssociationRecord(
+            RocketChatAssociationModel.ROOM,
+            `${this.room.id}/${this.room.slugifiedName}`
+        );
+        const userLocation = (
+            await this.read.getPersistenceReader().readByAssociation(assoc)
+        )[0] as { userLocation?: string } | undefined;
+        const locationValue = userLocation?.userLocation;
+
         switch (command) {
             case "help":
                 await handler.Help();
@@ -107,7 +121,9 @@ export class CommandUtility implements ICommandUtility {
                     this.modify,
                     this.room,
                     this.sender,
-                    "We will use your device **IP address** to get your location"
+                    locationValue
+                        ? `Your current location is set to ${locationValue}. Want to change your location? \n We will use your device **IP address** to get your location`
+                        : "Share your Location with us, We will use your device **IP address** to get your location"
                 );
                 break;
             case "info":
