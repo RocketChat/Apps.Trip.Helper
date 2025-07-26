@@ -251,45 +251,70 @@ export async function sendGetLocationMessage(
     return read.getNotifier().notifyUser(sender, helperMessage.getMessage());
 }
 
-export async function getUserLocationIP(
-    http: IHttp,
+export async function sendDefaultNotification(
+    app: TripHelperApp,
     read: IRead,
-    room: IRoom,
-    sender: IUser
-): Promise<{ latitude: number; longitude: number } | null> {
-    const res = await http.get("https://ipinfo.io/json");
-    const data = res.data;
-    if (data && data.loc) {
-        const [latitude, longitude] = data.loc.split(",");
-        return {
-            latitude: parseFloat(latitude),
-            longitude: parseFloat(longitude),
-        };
-    }
-    notifyMessage(
-        room,
-        read,
-        sender,
-        "**Unable to retrieve location** from IP address."
-    );
-    return null;
-}
+    modify: IModify,
+    user: IUser,
+    room: IRoom
+): Promise<void> {
+    const appUser = (await read.getUserReader().getAppUser()) as IUser;
+    const { elementBuilder, blockBuilder } = app.getUtils();
 
-export async function getUserAddressThroughIP(
-    response: { latitude: number; longitude: number },
-    http: IHttp,
-    read: IRead,
-    room: IRoom,
-    sender: IUser
-): Promise<string | null> {
-    const addressResponse = await http.get(
-        `https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${response.latitude}&lon=${response.longitude}&zoom=14&addressdetails=1`
+    const text = blockBuilder.createSectionBlock({
+        text: `Hello ${user.name}, how can I assist you today?`,
+    });
+
+    const createChannelButtonElement = elementBuilder.addButton(
+        { text: "Create Channel", style: "primary" },
+        {
+            blockId: "Create_Channel_Block",
+            actionId: "Create_Channel_Action",
+        }
     );
-    notifyMessage(
-        room,
-        read,
-        sender,
-        `Your Location: ${addressResponse.data.display_name}`
+
+    const changeLocationButtonElement = elementBuilder.addButton(
+        { text: "Show Location", style: "primary" },
+        {
+            blockId: "Show_Location_Block",
+            actionId: "Show_Location_Action",
+        }
     );
-    return addressResponse.data.display_name;
+
+    const showInfoButtonElement = elementBuilder.addButton(
+        { text: "Show Info", style: "secondary" },
+        {
+            blockId: "Show_Info_Block",
+            actionId: "Show_Info_Action",
+        }
+    );
+
+    const needMoreButtonElement = elementBuilder.addButton(
+        { text: "Need More", style: "secondary" },
+        {
+            blockId: "Need_More_Block",
+            actionId: "Need_More_Action",
+        }
+    );
+
+    const buttonAction = blockBuilder.createActionBlock({
+        elements: [
+            createChannelButtonElement,
+            changeLocationButtonElement,
+            showInfoButtonElement,
+            needMoreButtonElement,
+        ],
+    });
+
+    const blocks = [text, buttonAction];
+
+    const helperMessage = modify
+        .getCreator()
+        .startMessage()
+        .setRoom(room)
+        .setSender(appUser)
+        .setGroupable(false)
+        .setBlocks(blocks);
+
+    return read.getNotifier().notifyUser(user, helperMessage.getMessage());
 }

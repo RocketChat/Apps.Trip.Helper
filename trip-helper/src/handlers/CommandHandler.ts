@@ -9,6 +9,7 @@ import {
 import { TripHelperApp } from "../../TripHelperApp";
 import { IHanderParams, IHandler } from "../definition/handlers/IHandler";
 import {
+    sendDefaultNotification,
     sendHelperMessage,
     sendSetReminder_1,
     sendSetReminder_2,
@@ -127,6 +128,16 @@ export class CommandHandler implements IHandler {
                 .openSurfaceView(modal, { triggerId }, this.sender);
         }
         return;
+    }
+
+    public async getDefaultNotification(): Promise<void> {
+        return sendDefaultNotification(
+            this.app,
+            this.read,
+            this.modify,
+            this.sender,
+            this.room
+        );
     }
 
     public async Info(): Promise<void> {
