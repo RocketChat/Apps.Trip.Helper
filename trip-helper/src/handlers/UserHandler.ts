@@ -118,13 +118,18 @@ export class UserHandler {
         );
     }
 
+    private cachedLocationIP: any = null;
+
     public async locationDetectedThroughIP(): Promise<void> {
-        const response = await getUserLocationIP(
-            this.http,
-            this.read,
-            this.room,
-            this.sender
-        );
+        if (!this.cachedLocationIP) {
+            this.cachedLocationIP = await getUserLocationIP(
+                this.http,
+                this.read,
+                this.room,
+                this.sender
+            );
+        }
+        const response = this.cachedLocationIP;
         if (response) {
             notifyMessage(
                 this.room,
@@ -170,7 +175,7 @@ export class UserHandler {
                 this.room,
                 this.read,
                 this.sender,
-                `Your location has been stored as: ${location}. You can now ask for trip-related information!`
+                `Your location has been stored as: ${userLocation}. You can now ask for trip-related information!`
             );
         }
     }

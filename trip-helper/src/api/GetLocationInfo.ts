@@ -13,7 +13,6 @@ export async function getUserLocationIP(
     room: IRoom,
     sender: IUser
 ): Promise<{ latitude: number; longitude: number } | null> {
-    
     const res = await http.get("https://ipinfo.io/json");
     const data = res.data;
 
