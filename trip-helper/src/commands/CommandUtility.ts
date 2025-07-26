@@ -129,6 +129,10 @@ export class CommandUtility implements ICommandUtility {
             case "info":
                 await handler.Info();
                 break;
+
+            case undefined:
+                await handler.getDefaultNotification();
+                break;
             default:
                 notifyMessage(
                     this.room,

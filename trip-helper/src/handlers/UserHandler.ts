@@ -95,7 +95,14 @@ export class UserHandler {
                 this.sender,
                 "Unable to store your location due to a system error. Please try again later."
             );
+            return;
         }
+        notifyMessage(
+            this.room,
+            this.read,
+            this.sender,
+            `Your location has been stored as: ${userLocation}. You can now ask for trip-related information!`
+        );
     }
 
     public async noLocationDetected(): Promise<void> {

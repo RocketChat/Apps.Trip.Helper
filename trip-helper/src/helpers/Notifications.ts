@@ -250,3 +250,71 @@ export async function sendGetLocationMessage(
         .setBlocks(blocks);
     return read.getNotifier().notifyUser(sender, helperMessage.getMessage());
 }
+
+export async function sendDefaultNotification(
+    app: TripHelperApp,
+    read: IRead,
+    modify: IModify,
+    user: IUser,
+    room: IRoom
+): Promise<void> {
+    const appUser = (await read.getUserReader().getAppUser()) as IUser;
+    const { elementBuilder, blockBuilder } = app.getUtils();
+
+    const text = blockBuilder.createSectionBlock({
+        text: `Hello ${user.name}, how can I assist you today?`,
+    });
+
+    const createChannelButtonElement = elementBuilder.addButton(
+        { text: "Create Channel", style: "primary" },
+        {
+            blockId: "Create_Channel_Block",
+            actionId: "Create_Channel_Action",
+        }
+    );
+
+    const changeLocationButtonElement = elementBuilder.addButton(
+        { text: "Show Location", style: "primary" },
+        {
+            blockId: "Show_Location_Block",
+            actionId: "Show_Location_Action",
+        }
+    );
+
+    const showInfoButtonElement = elementBuilder.addButton(
+        { text: "Show Info", style: "secondary" },
+        {
+            blockId: "Show_Info_Block",
+            actionId: "Show_Info_Action",
+        }
+    );
+
+    const needMoreButtonElement = elementBuilder.addButton(
+        { text: "Need More", style: "secondary" },
+        {
+            blockId: "Need_More_Block",
+            actionId: "Need_More_Action",
+        }
+    );
+
+    const buttonAction = blockBuilder.createActionBlock({
+        elements: [
+            createChannelButtonElement,
+            changeLocationButtonElement,
+            showInfoButtonElement,
+            needMoreButtonElement,
+        ],
+    });
+
+    const blocks = [text, buttonAction];
+
+    const helperMessage = modify
+        .getCreator()
+        .startMessage()
+        .setRoom(room)
+        .setSender(appUser)
+        .setGroupable(false)
+        .setBlocks(blocks);
+
+    return read.getNotifier().notifyUser(user, helperMessage.getMessage());
+}
