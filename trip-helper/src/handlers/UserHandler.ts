@@ -191,6 +191,7 @@ export class UserHandler {
         const modal = await UserReminderModal({
             app: this.app,
             modify: this.modify,
+            read: this.read,
             room: this.room,
         });
         if (modal instanceof Error) {
@@ -226,6 +227,7 @@ export class UserHandler {
         const modal = await UserReminderModal({
             app: this.app,
             modify: this.modify,
+            read: this.read,
             room: this.room,
             eventResponse: sendData,
         });
@@ -261,6 +263,7 @@ export class UserHandler {
         const modal = await UserReminderModal({
             app: this.app,
             modify: this.modify,
+            read: this.read,
             room: this.room,
             eventResponse: sendData,
         });
@@ -295,6 +298,7 @@ export class UserHandler {
         const modal = await UserReminderModal({
             app: this.app,
             modify: this.modify,
+            read: this.read,
             room: this.room,
             eventResponse: sendData,
         });

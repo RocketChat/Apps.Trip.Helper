@@ -59,10 +59,25 @@ export class ExecuteViewSubmit {
         view: any,
         triggerId: string
     ): Promise<IUIKitResponse> {
-        const timeStateValue =
-            view.state?.["time-input-block"]?.["time-input-action"];
-        const messageStateValue =
-            view.state?.["message-input-block"]?.["message-input-action"];
+        const reminderTypeValue =
+            view.state?.["reminder-type-block"]?.["reminder-type-action"];
+        
+        // Find the dynamic block IDs based on the selected reminder type
+        let dateStateValue, timeStateValue, messageStateValue;
+        
+        // Try to find the values from dynamic block IDs
+        for (const blockId in view.state || {}) {
+            if (blockId.startsWith("date-input-block-")) {
+                const actionId = Object.keys(view.state[blockId])[0];
+                dateStateValue = view.state[blockId][actionId];
+            } else if (blockId.startsWith("time-input-block-")) {
+                const actionId = Object.keys(view.state[blockId])[0];
+                timeStateValue = view.state[blockId][actionId];
+            } else if (blockId.startsWith("message-input-block-")) {
+                const actionId = Object.keys(view.state[blockId])[0];
+                messageStateValue = view.state[blockId][actionId];
+            }
+        }
 
         const validation = await this.formValidation(
             timeStateValue,
@@ -90,18 +105,23 @@ export class ExecuteViewSubmit {
             message: messageStateValue,
         };
 
-        const when = new Date();
+        // Parse the date if provided
+        let targetDate = new Date();
+        if (dateStateValue) {
+            targetDate = new Date(dateStateValue);
+        }
+
         const [hours, minutes] = formData.whenTime.split(":").map(Number);
+        targetDate.setHours(hours, minutes, 0, 0);
 
-        when.setHours(hours, minutes, 0, 0);
-
-        if (when.getTime() <= Date.now()) {
-            when.setDate(when.getDate() + 1);
+        // If the time has passed today, schedule for tomorrow
+        if (targetDate.getTime() <= Date.now()) {
+            targetDate.setDate(targetDate.getDate() + 1);
         }
 
         const jobId = await this.modify.getScheduler().scheduleOnce({
             id: "trip-helper-scheduled-task",
-            when: when.toISOString(),
+            when: targetDate.toISOString(),
             data: {
                 user: user,
                 room: room,
@@ -123,7 +143,7 @@ export class ExecuteViewSubmit {
             room,
             this.read,
             user,
-            `Reminder set for ${formData.whenTime}: "${formData.message}"`
+            `Reminder set for ${targetDate.toLocaleString()}: "${formData.message}"`
         );
         return this.context.getInteractionResponder().successResponse();
     }
