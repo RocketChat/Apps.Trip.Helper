@@ -114,7 +114,6 @@ export class CommandHandler implements IHandler {
         const modal = await UserReminderModal({
             app: this.app,
             modify: this.modify,
-            read: this.read,
             room: this.room,
         });
         if (modal instanceof Error) {

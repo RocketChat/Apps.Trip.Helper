@@ -8,7 +8,6 @@ import {
     RocketChatAssociationModel,
     RocketChatAssociationRecord,
 } from "@rocket.chat/apps-engine/definition/metadata";
-import { LocationEvent } from "../definition/handlers/EventHandler";
 
 export async function storeLocationEvents(
     read: IRead,
@@ -29,25 +28,4 @@ export async function storeLocationEvents(
         true
     );
     return true;
-}
-
-export async function getStoredLocationEvents(
-    read: IRead,
-    room: IRoom
-): Promise<LocationEvent[]> {
-    const assoc = new RocketChatAssociationRecord(
-        RocketChatAssociationModel.ROOM,
-        `${room.id}/events`
-    );
-    
-    const result = await read.getPersistenceReader().readByAssociation(assoc);
-    
-    if (result && result.length > 0) {
-        const data = result[0] as any;
-        if (data && data.eventResponse) {
-            return data.eventResponse;
-        }
-    }
-    
-    return [];
 }

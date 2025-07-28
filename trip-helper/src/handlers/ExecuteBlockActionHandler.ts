@@ -11,7 +11,6 @@ import {
 import { RoomInteractionStorage } from "../storage/RoomInteraction";
 import { TripHelperApp } from "../../TripHelperApp";
 import { UserHandler } from "./UserHandler";
-import { UserReminderModal } from "../modal/ReminderModal";
 
 export class ExecuteBlockActionHandler {
     private context: UIKitBlockInteractionContext;
@@ -59,8 +58,6 @@ export class ExecuteBlockActionHandler {
             triggerId
         );
         switch (actionId) {
-            case "reminder-type-action":
-                return await this.handleReminderTypeChange();
             case "Location_Accept":
                 await userHandler.confirmLocationAccepted();
                 return this.context.getInteractionResponder().successResponse();
@@ -88,42 +85,5 @@ export class ExecuteBlockActionHandler {
             default:
                 return this.context.getInteractionResponder().successResponse();
         }
-    }
-
-    private async handleReminderTypeChange(): Promise<IUIKitResponse> {
-        const { user, value } = this.context.getInteractionData();
-        const persistenceRead = this.read.getPersistenceReader();
-        
-        const roomInteractionStorage = new RoomInteractionStorage(
-            this.persistence,
-            persistenceRead,
-            user.id
-        );
-        
-        const roomId = await roomInteractionStorage.getInteractionRoomId();
-        const room = await this.read.getRoomReader().getById(roomId);
-        
-        if (!room) {
-            return this.context.getInteractionResponder().errorResponse();
-        }
-        
-        // Get the selected reminder type from the interaction value
-        const selectedReminderType = value;
-        
-        // For now, we'll create the modal without existing event data
-        // In a real implementation, you might want to store and retrieve this data
-        const eventResponse = undefined;
-        
-        // Generate the updated modal with the new reminder type
-        const updatedModal = await UserReminderModal({
-            app: this.app,
-            modify: this.modify,
-            read: this.read,
-            room,
-            eventResponse,
-            selectedReminderOption: selectedReminderType,
-        });
-        
-        return this.context.getInteractionResponder().updateModalViewResponse(updatedModal);
     }
 }
