@@ -25,8 +25,8 @@ export async function CreatePrivateGroup(
         .setType(RoomType.PRIVATE_GROUP)
         .setCreator(creator)
         .setMembersToBeAddedByUsernames(usernames)  
-        .setSlugifiedName(`asktrip- ${name}`)
-        .setDisplayName(`asktrip- ${name}`);
+        .setSlugifiedName(`asktrip${name}`)
+        .setDisplayName(`asktrip${name}`);
 
     const roomId = await modify.getCreator().finish(newRoom);
     return (await read.getRoomReader().getById(roomId)) as IRoom;

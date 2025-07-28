@@ -26,8 +26,8 @@ export async function storeRoomName(
         .getPersistenceReader()
         .readByAssociation(assoc)) as Array<{ tripRooms: string[] }>;
     const roomList = existingData?.[0]?.tripRooms || [];
-    if (!roomList.includes(`asktrip- ${roomName}`)) {
-        roomList.push(`asktrip- ${roomName}`);
+    if (!roomList.includes(`asktrip${roomName}`)) {
+        roomList.push(`asktrip${roomName}`);
     } else {
         notifyMessage(
             room,
