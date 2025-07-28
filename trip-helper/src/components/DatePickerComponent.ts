@@ -2,7 +2,7 @@ import { InputElementDispatchAction } from "@rocket.chat/ui-kit";
 import { TripHelperApp } from "../../TripHelperApp";
 import { ElementInteractionParam } from "../definition/ui-kit/Element/IElementBuilder";
 
-export function timePickerComponent(
+export function datePickerComponent(
     {
         app,
         placeholder,
@@ -20,10 +20,10 @@ export function timePickerComponent(
 ) {
     const { elementBuilder, blockBuilder } = app.getUtils();
 
-    const timePickerElement = elementBuilder.createTimePicker(
+    const datePickerElement = elementBuilder.createDatePicker(
         {
             placeholder,
-            initialTime: initialValue,
+            initialDate: initialValue,
             dispatchActionConfig,
         },
         {
@@ -32,11 +32,11 @@ export function timePickerComponent(
         }
     );
 
-    const timePickerBlock = blockBuilder.createInputBlock({
+    const datePickerBlock = blockBuilder.createInputBlock({
         text: label,
-        element: timePickerElement,
+        element: datePickerElement,
         optional: false,
     });
 
-    return timePickerBlock;
+    return datePickerBlock;
 }
