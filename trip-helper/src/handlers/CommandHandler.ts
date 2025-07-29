@@ -23,7 +23,7 @@ import {
     RocketChatAssociationModel,
     RocketChatAssociationRecord,
 } from "@rocket.chat/apps-engine/definition/metadata";
-import { notifyMessage } from "../helpers/Message";
+import { notifyMessage, sendMessage } from "../helpers/Message";
 import { getAPIConfig } from "../config/settings";
 import { InfoHandler } from "./InfoHandler";
 import { LOCATION_INFORMATION } from "../enum/mainAppResponses";
@@ -141,6 +141,8 @@ export class CommandHandler implements IHandler {
     }
 
     public async Info(): Promise<void> {
+        const appUser = (await this.read.getUserReader().getAppUser()) as IUser;
+
         const assoc = new RocketChatAssociationRecord(
             RocketChatAssociationModel.ROOM,
             `${this.room.id}/${this.room.slugifiedName}`
@@ -249,10 +251,10 @@ export class CommandHandler implements IHandler {
                 );
                 return;
             }
-            await notifyMessage(
+            await sendMessage(
+                this.modify,
+                appUser,
                 this.room,
-                this.read,
-                this.sender,
                 `${infoResponses}`
             );
             const currentDate = new Date().toLocaleDateString("en-GB");

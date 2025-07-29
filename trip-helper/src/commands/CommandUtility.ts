@@ -86,6 +86,18 @@ export class CommandUtility implements ICommandUtility {
                 break;
             case "create":
                 if (subCommand) {
+                    const roomAlreadyExists = await this.read
+                        .getRoomReader()
+                        .getByName(`askTrip-${subCommand}`);
+                    if (roomAlreadyExists) {
+                        notifyMessage(
+                            this.room,
+                            this.read,
+                            this.sender,
+                            `Trip channel with name '${subCommand}' already exists. Enjoy app's features there!🚀`
+                        );
+                        return;
+                    }
                     const createRoom = await storeRoomName(
                         this.room,
                         this.read,
@@ -100,6 +112,13 @@ export class CommandUtility implements ICommandUtility {
                             this.read,
                             this.sender,
                             `Your Trip channel ${subCommand} created successfully!, Enjoy your trip! 🚀`
+                        );
+                    } else {
+                        notifyMessage(
+                            this.room,
+                            this.read,
+                            this.sender,
+                            `Failed to create Trip channel ${subCommand}. Please try again with a different name.`
                         );
                     }
                 } else {

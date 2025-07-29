@@ -285,8 +285,7 @@ export class TripHelperApp extends App implements IPostMessageSent {
             );
         } else if (
             typeof message.text === "string" &&
-            message.text.trim().length > 0 &&
-            !message.text.includes("AskTrip:-")
+            message.text.trim().length > 0
         ) {
             const appUser = await this.getAccessors()
                 .reader.getUserReader()
@@ -338,7 +337,7 @@ export class TripHelperApp extends App implements IPostMessageSent {
                 return;
             }
 
-            sendMessage(modify, appUser, message.room, `AskTrip:- ${response}`);
+            sendMessage(modify, appUser, message.room, `${response}`);
         }
     }
 }
