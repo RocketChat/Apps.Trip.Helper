@@ -40,8 +40,7 @@ import {
 import { ExecuteBlockActionHandler } from "./src/handlers/ExecuteBlockActionHandler";
 import { MessageHandler } from "./src/handlers/MessageHandler";
 import { ExecuteViewSubmit } from "./src/handlers/ExecuteViewSubmit";
-import { StartupType } from "@rocket.chat/apps-engine/definition/scheduler";
-import { APP_RESPONSES } from "./src/const/messages";
+import { APP_RESPONSES } from "./src/enum/mainAppResponses";
 
 export class TripHelperApp extends App implements IPostMessageSent {
     private blockBuilder: BlockBuilder;
@@ -202,10 +201,6 @@ export class TripHelperApp extends App implements IPostMessageSent {
             message.file._id &&
             message.file.type.startsWith("image/")
         ) {
-            const appUser = await this.getAccessors()
-                .reader.getUserReader()
-                .getAppUser(this.getID());
-
             notifyMessage(
                 message.room,
                 read,
@@ -257,8 +252,7 @@ export class TripHelperApp extends App implements IPostMessageSent {
                 return;
             }
         }
-        // 32° 18' 23.1" N 122° 36' 52.5" W
-        // 29.3875, 76.9682
+
         else if (
             message.text?.match(
                 /^\d{1,3}°\s\d{1,2}'\s\d{1,2}\.\d{1,2}"\s[NSEW]\s\d{1,3}°\s\d{1,2}'\s\d{1,2}\.\d{1,2}"\s[NSEW]$/

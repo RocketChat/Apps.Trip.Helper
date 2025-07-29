@@ -26,7 +26,7 @@ import {
 import { notifyMessage } from "../helpers/Message";
 import { getAPIConfig } from "../config/settings";
 import { InfoHandler } from "./InfoHandler";
-import { LOCATION_INFORMATION } from "../const/messages";
+import { LOCATION_INFORMATION } from "../enum/mainAppResponses";
 import { EventReminderHandler } from "./EventReminderHandler";
 import { storeLocationEvents } from "../storage/EventStorage";
 import { LocationEvents } from "../definition/handlers/EventHandler";
@@ -282,7 +282,7 @@ export class CommandHandler implements IHandler {
             }
 
             if (eventResponse[0]) {
-                sendSetReminder_1(
+                await sendSetReminder_1(
                     this.app,
                     this.read,
                     this.modify,

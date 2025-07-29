@@ -1,25 +1,18 @@
 import {
-    IHttp,
     IModify,
     IPersistence,
     IRead,
 } from "@rocket.chat/apps-engine/definition/accessors";
 import { TripHelperApp } from "../../TripHelperApp";
 import {
-    IUIKitErrorResponse,
     IUIKitResponse,
-    UIKitBlockInteractionContext,
     UIKitViewSubmitInteractionContext,
 } from "@rocket.chat/apps-engine/definition/uikit";
 import { IRoom } from "@rocket.chat/apps-engine/definition/rooms";
 import { IUser } from "@rocket.chat/apps-engine/definition/users";
 import { notifyMessage } from "../helpers/Message";
 import { RoomInteractionStorage } from "../storage/RoomInteraction";
-
-export interface IJobFormData {
-    whenTime: string;
-    message: string;
-}
+import { IJobFormData } from "../definition/storage/IJobFormData";
 
 export class ExecuteViewSubmit {
     private context: UIKitViewSubmitInteractionContext;
@@ -60,13 +53,21 @@ export class ExecuteViewSubmit {
         triggerId: string
     ): Promise<IUIKitResponse> {
         const timeStateValue =
-            view.state?.["time-input-block"]?.["time-input-action"];
+            view.state?.["time-input-block"]?.["time-input-action"] ||
+            view.initialState?.["time-input-block"]?.["time-input-action"];
         const messageStateValue =
-            view.state?.["message-input-block"]?.["message-input-action"];
+            view.state?.["message-input-block"]?.["message-input-action"] ||
+            view.initialState?.["message-input-block"]?.[
+                "message-input-action"
+            ];
+        const dateStateValue =
+            view.state?.["date-input-block"]?.["date-input-action"] ||
+            view.initialState?.["date-input-block"]?.["date-input-action"];
 
         const validation = await this.formValidation(
             timeStateValue,
-            messageStateValue
+            messageStateValue,
+            dateStateValue
         );
 
         if (validation !== true) {
@@ -75,8 +76,8 @@ export class ExecuteViewSubmit {
                 this.read,
                 user,
                 `${
-                    user.username
-                }, please fix the following errors: ${JSON.stringify(
+                    user.name || user.username
+                }, Please fix the following errors: ${JSON.stringify(
                     validation
                 )}`
             );
@@ -86,18 +87,15 @@ export class ExecuteViewSubmit {
             });
         }
         const formData: IJobFormData = {
+            whenDate: dateStateValue,
             whenTime: timeStateValue,
             message: messageStateValue,
         };
 
-        const when = new Date();
+        const [year, month, day] = formData.whenDate.split("-").map(Number);
         const [hours, minutes] = formData.whenTime.split(":").map(Number);
 
-        when.setHours(hours, minutes, 0, 0);
-
-        if (when.getTime() <= Date.now()) {
-            when.setDate(when.getDate() + 1);
-        }
+        const when = new Date(year, month - 1, day, hours, minutes, 0, 0);
 
         const jobId = await this.modify.getScheduler().scheduleOnce({
             id: "trip-helper-scheduled-task",
@@ -123,35 +121,43 @@ export class ExecuteViewSubmit {
             room,
             this.read,
             user,
-            `Reminder set for ${formData.whenTime}: "${formData.message}"`
+            `Reminder set for **${when}**: **${formData.message}**`
         );
         return this.context.getInteractionResponder().successResponse();
     }
 
     private async formValidation(
         whenTime: string,
-        message: string
+        message: string,
+        date: string
     ): Promise<Record<string, string> | true> {
+        if (!date) {
+            return { date: "Date cannot be empty" };
+        }
         if (!message) {
             return { message: "Message cannot be empty" };
         }
         if (!whenTime) {
             return { whenTime: "Time cannot be empty" };
         }
-        const now = new Date();
+        const [year, month, day] = date.split("-").map(Number);
         const [hours, minutes] = whenTime.split(":").map(Number);
-        const inputTime = new Date(now);
-        inputTime.setHours(hours, minutes, 0, 0);
 
-        if (inputTime.getTime() <= now.getTime()) {
-            const diff = now.getTime() - inputTime.getTime();
-            if (diff > 12 * 60 * 60 * 1000) {
-                inputTime.setDate(inputTime.getDate() + 1);
-            }
-        }
+        const scheduledTime = new Date(
+            year,
+            month - 1,
+            day,
+            hours,
+            minutes,
+            0,
+            0
+        );
+        const now = new Date();
 
-        if (inputTime.getTime() <= now.getTime()) {
-            return { whenTime: "Time must be in the future" };
+        if (scheduledTime.getTime() <= now.getTime()) {
+            return {
+                whenTime: "The selected date and time must be in the future",
+            };
         }
         return true;
     }

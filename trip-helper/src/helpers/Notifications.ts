@@ -49,7 +49,7 @@ export async function sendSetReminder_1(
 
     const sendSetReminder = elementBuilder.addButton(
         {
-            text: "Set Reminder-1",
+            text: "Set Reminder",
             style: "primary",
         },
         {
@@ -89,7 +89,7 @@ export async function sendSetReminder_2(
 
     const sendSetReminder = elementBuilder.addButton(
         {
-            text: "Set Reminder-2",
+            text: "Set Reminder",
             style: "primary",
         },
         {
@@ -129,7 +129,7 @@ export async function sendSetReminder_3(
 
     const sendSetReminder = elementBuilder.addButton(
         {
-            text: "Set Reminder-3",
+            text: "Set Reminder",
             style: "primary",
         },
         {

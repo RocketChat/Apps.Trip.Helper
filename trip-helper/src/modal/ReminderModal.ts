@@ -20,7 +20,6 @@ import {
     timePickerComponent,
 } from "../components/TimePickerComponent";
 import { LocationEvent } from "../definition/handlers/EventHandler";
-import { notifyMessage } from "../helpers/Message";
 
 export async function UserReminderModal({
     app,
@@ -37,14 +36,32 @@ export async function UserReminderModal({
     const { elementBuilder, blockBuilder } = app.getUtils();
     const blocks: (InputBlock | DividerBlock)[] = [];
     const now = new Date();
-    const date = eventResponse?.date || now.toISOString().split("T")[0];
-    const time =
-        eventResponse?.time ||
-        now.toLocaleTimeString([], {
+    let date: string | undefined;
+    let time: string | undefined;
+    let initialMessage: string = "";
+
+    if (eventResponse) {
+        if (eventResponse.date) {
+            date = eventResponse.date;
+        }
+        if (eventResponse.time) {
+            time = eventResponse.time;
+        }
+        if (eventResponse.title) {
+            initialMessage = `Remind me for ${eventResponse.title}`;
+        }
+    }
+
+    if (!date) {
+        date = now.toISOString().split("T")[0];
+    }
+    if (!time) {
+        time = now.toLocaleTimeString([], {
             hour: "2-digit",
             minute: "2-digit",
             hour12: false,
         });
+    }
 
     const reminderDateInput = datePickerComponent(
         {
@@ -79,7 +96,7 @@ export async function UserReminderModal({
             app,
             placeholder: "Happy hour start! 🎉 🍣",
             label: "Message",
-            initialValue: `Remind me for ${eventResponse?.title || ""}`,
+            initialValue: initialMessage,
             optional: false,
             multiline: true,
         },
