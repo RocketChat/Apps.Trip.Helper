@@ -150,16 +150,6 @@ export class CommandHandler implements IHandler {
         )[0] as { userLocation?: string } | undefined;
         const locationValue = userLocation?.userLocation;
 
-        if (!locationValue) {
-            notifyMessage(
-                this.room,
-                this.read,
-                this.sender,
-                "Please provide a valid location first."
-            );
-            return;
-        }
-
         const { searchEngineID, searchEngineApiKey } = await getAPIConfig(
             this.read
         );
@@ -173,6 +163,17 @@ export class CommandHandler implements IHandler {
             );
             return;
         }
+
+        if (!locationValue) {
+            notifyMessage(
+                this.room,
+                this.read,
+                this.sender,
+                "Please set your location first using the `/trip location` command. Then we'll fetch local information for you."
+            );
+            return;
+        }
+
         const infoHandler = new InfoHandler(this.http, this.read);
         const eventHandler = new EventReminderHandler(this.http, this.read);
 

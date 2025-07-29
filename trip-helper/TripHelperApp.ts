@@ -35,12 +35,14 @@ import { ElementBuilder } from "./src/lib/ElementBuilder";
 import {
     IUIKitResponse,
     UIKitBlockInteractionContext,
+    UIKitViewCloseInteractionContext,
     UIKitViewSubmitInteractionContext,
 } from "@rocket.chat/apps-engine/definition/uikit";
 import { ExecuteBlockActionHandler } from "./src/handlers/ExecuteBlockActionHandler";
 import { MessageHandler } from "./src/handlers/MessageHandler";
 import { ExecuteViewSubmit } from "./src/handlers/ExecuteViewSubmit";
 import { APP_RESPONSES } from "./src/enum/mainAppResponses";
+import { ExecuteViewClosedHandler } from "./src/handlers/ExecuteViewClosedHandler";
 
 export class TripHelperApp extends App implements IPostMessageSent {
     private blockBuilder: BlockBuilder;
@@ -154,6 +156,24 @@ export class TripHelperApp extends App implements IPostMessageSent {
         return await executeBlockActionHandler.handleActions();
     }
 
+    public async executeViewClosedHandler(
+        context: UIKitViewCloseInteractionContext,
+        read: IRead,
+        http: IHttp,
+        persistence: IPersistence,
+        modify: IModify
+    ): Promise<IUIKitResponse> {
+        const handler = new ExecuteViewClosedHandler(
+            this,
+            read,
+            http,
+            persistence,
+            modify,
+            context
+        );
+
+        return await handler.handleActions();
+    }
     public async checkPostMessageSent(
         message: IMessage,
         read: IRead,
@@ -251,9 +271,7 @@ export class TripHelperApp extends App implements IPostMessageSent {
                 );
                 return;
             }
-        }
-
-        else if (
+        } else if (
             message.text?.match(
                 /^\d{1,3}°\s\d{1,2}'\s\d{1,2}\.\d{1,2}"\s[NSEW]\s\d{1,3}°\s\d{1,2}'\s\d{1,2}\.\d{1,2}"\s[NSEW]$/
             ) ||
@@ -305,12 +323,6 @@ export class TripHelperApp extends App implements IPostMessageSent {
                 );
                 return;
             }
-            // notifyMessage(
-            //     message.room,
-            //     read,
-            //     message.sender,
-            //     `${message.sender.username}, your location is set to: ${locationValue}. ${message.text}`
-            // );
             const response = await messageHandler.sendMessage(
                 message.text,
                 locationValue

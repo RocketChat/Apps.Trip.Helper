@@ -131,14 +131,16 @@ export class ExecuteViewSubmit {
         message: string,
         date: string
     ): Promise<Record<string, string> | true> {
-        if (!date) {
-            return { date: "Date cannot be empty" };
-        }
         if (!message) {
             return { message: "Message cannot be empty" };
         }
+
         if (!whenTime) {
             return { whenTime: "Time cannot be empty" };
+        }
+
+        if (!date) {
+            return { date: "Date cannot be empty" };
         }
         const [year, month, day] = date.split("-").map(Number);
         const [hours, minutes] = whenTime.split(":").map(Number);

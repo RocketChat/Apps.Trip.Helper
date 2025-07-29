@@ -3,12 +3,7 @@ import {
     IUIKitSurfaceViewParam,
 } from "@rocket.chat/apps-engine/definition/accessors";
 import { TripHelperApp } from "../../TripHelperApp";
-import {
-    DividerBlock,
-    InputBlock,
-    TextObjectType,
-    TimePickerElement,
-} from "@rocket.chat/ui-kit";
+import { DividerBlock, InputBlock, TextObjectType } from "@rocket.chat/ui-kit";
 import {
     ButtonStyle,
     UIKitSurfaceType,
@@ -36,15 +31,15 @@ export async function UserReminderModal({
     const { elementBuilder, blockBuilder } = app.getUtils();
     const blocks: (InputBlock | DividerBlock)[] = [];
     const now = new Date();
-    let date: string | undefined;
-    let time: string | undefined;
+    let date: string = "";
+    let time: string = "";
     let initialMessage: string = "";
 
     if (eventResponse) {
-        if (eventResponse.date) {
+        if (eventResponse.date && eventResponse.date.trim() !== "") {
             date = eventResponse.date;
         }
-        if (eventResponse.time) {
+        if (eventResponse.time && eventResponse.time.trim() !== "") {
             time = eventResponse.time;
         }
         if (eventResponse.title) {
@@ -52,10 +47,10 @@ export async function UserReminderModal({
         }
     }
 
-    if (!date) {
+    if (!date || isNaN(Date.parse(date))) {
         date = now.toISOString().split("T")[0];
     }
-    if (!time) {
+    if (!time || !/^\d{2}:\d{2}$/.test(time)) {
         time = now.toLocaleTimeString([], {
             hour: "2-digit",
             minute: "2-digit",
@@ -138,5 +133,18 @@ export async function UserReminderModal({
         blocks: blocks,
         close: closeButton,
         submit: submitButton,
+        ...({
+            initialState: {
+                "date-input-block": {
+                    "date-input-action": date,
+                },
+                "time-input-block": {
+                    "time-input-action": time,
+                },
+                "message-input-block": {
+                    "message-input-action": initialMessage,
+                },
+            },
+        } as any),
     };
 }
