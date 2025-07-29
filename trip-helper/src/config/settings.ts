@@ -20,17 +20,17 @@ export const settings: ISetting[] = [
         i18nDescription: "AI model to be used for inference.",
         values: [
             {
-                key: "meta-llama/Llama-3.2-11B-Vision-Instruct-Turbo",
+                key: "meta-llama/Llama-3.2-11B-Vision-Instruct",
                 i18nLabel: "Llama 3.2 Vision 11B",
             },
             {
-                key: "meta-llama/Llama-3.3-11B-Vision-Instruct-Turbo",
+                key: "meta-llama/Llama-3.3-11B-Vision-Instruct",
                 i18nLabel: "Llama 3.3 Vision 11B",
             },
         ],
         required: true,
         public: true,
-        packageValue: "meta-llama/Llama-3.2-11B-Vision-Instruct-Turbo",
+        packageValue: "meta-llama/Llama-3.2-11B-Vision-Instruct",
     },
     {
         id: Settings.API_KEY,
