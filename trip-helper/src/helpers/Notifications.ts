@@ -6,7 +6,6 @@ import {
 import { IRoom } from "@rocket.chat/apps-engine/definition/rooms";
 import { IUser } from "@rocket.chat/apps-engine/definition/users";
 import { TripHelperApp } from "../../TripHelperApp";
-import { notifyMessage } from "./Message";
 
 export async function sendHelperMessage(
     read: IRead,
@@ -262,22 +261,22 @@ export async function sendDefaultNotification(
     const { elementBuilder, blockBuilder } = app.getUtils();
 
     const text = blockBuilder.createSectionBlock({
-        text: `Hello ${user.name}, how can I assist you today?`,
+        text: `Hello ${user.name} 👋, I am your Trip Helper Bot, How can I assist you today?`,
     });
-
-    const createChannelButtonElement = elementBuilder.addButton(
-        { text: "Create Channel", style: "primary" },
-        {
-            blockId: "Create_Channel_Block",
-            actionId: "Create_Channel_Action",
-        }
-    );
 
     const changeLocationButtonElement = elementBuilder.addButton(
         { text: "Show Location", style: "primary" },
         {
             blockId: "Show_Location_Block",
             actionId: "Show_Location_Action",
+        }
+    );
+
+    const setReminderButtonElement = elementBuilder.addButton(
+        { text: "Set Reminder", style: "primary" },
+        {
+            blockId: "Set_Reminder_Getting_Started_Block",
+            actionId: "Set_Reminder_Getting_Started_Action",
         }
     );
 
@@ -299,8 +298,8 @@ export async function sendDefaultNotification(
 
     const buttonAction = blockBuilder.createActionBlock({
         elements: [
-            createChannelButtonElement,
             changeLocationButtonElement,
+            setReminderButtonElement,
             showInfoButtonElement,
             needMoreButtonElement,
         ],

@@ -149,7 +149,7 @@ export class CommandUtility implements ICommandUtility {
                 await handler.Info();
                 break;
 
-            case undefined:
+            case "start":
                 await handler.getDefaultNotification();
                 break;
             default:
