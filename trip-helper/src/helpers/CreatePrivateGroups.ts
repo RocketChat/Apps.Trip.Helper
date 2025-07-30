@@ -8,7 +8,7 @@ export async function CreatePrivateGroup(
     usernames: Array<string>,
     name: string
 ): Promise<IRoom> {
-    let room: IRoom | undefined = await read.getRoomReader().getByName(`asktrip- ${name}`);
+    let room: IRoom | undefined = await read.getRoomReader().getByName(`askTrip-${name}`);
 
     if (room) {
         return room;
@@ -24,9 +24,9 @@ export async function CreatePrivateGroup(
         .startRoom()
         .setType(RoomType.PRIVATE_GROUP)
         .setCreator(creator)
-        .setMembersToBeAddedByUsernames(usernames)  
-        .setSlugifiedName(`asktrip- ${name}`)
-        .setDisplayName(`asktrip- ${name}`);
+        .setMembersToBeAddedByUsernames(usernames)
+        .setSlugifiedName(`askTrip-${name}`)
+        .setDisplayName(`askTrip-${name}`);
 
     const roomId = await modify.getCreator().finish(newRoom);
     return (await read.getRoomReader().getById(roomId)) as IRoom;

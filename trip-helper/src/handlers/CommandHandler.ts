@@ -9,6 +9,7 @@ import {
 import { TripHelperApp } from "../../TripHelperApp";
 import { IHanderParams, IHandler } from "../definition/handlers/IHandler";
 import {
+    sendDefaultNotification,
     sendHelperMessage,
     sendSetReminder_1,
     sendSetReminder_2,
@@ -22,10 +23,10 @@ import {
     RocketChatAssociationModel,
     RocketChatAssociationRecord,
 } from "@rocket.chat/apps-engine/definition/metadata";
-import { notifyMessage } from "../helpers/Message";
+import { notifyMessage, sendMessage } from "../helpers/Message";
 import { getAPIConfig } from "../config/settings";
 import { InfoHandler } from "./InfoHandler";
-import { LOCATION_INFORMATION } from "../const/messages";
+import { LOCATION_INFORMATION } from "../enum/mainAppResponses";
 import { EventReminderHandler } from "./EventReminderHandler";
 import { storeLocationEvents } from "../storage/EventStorage";
 import { LocationEvents } from "../definition/handlers/EventHandler";
@@ -129,7 +130,19 @@ export class CommandHandler implements IHandler {
         return;
     }
 
+    public async getDefaultNotification(): Promise<void> {
+        return sendDefaultNotification(
+            this.app,
+            this.read,
+            this.modify,
+            this.sender,
+            this.room
+        );
+    }
+
     public async Info(): Promise<void> {
+        const appUser = (await this.read.getUserReader().getAppUser()) as IUser;
+
         const assoc = new RocketChatAssociationRecord(
             RocketChatAssociationModel.ROOM,
             `${this.room.id}/${this.room.slugifiedName}`
@@ -138,16 +151,6 @@ export class CommandHandler implements IHandler {
             await this.read.getPersistenceReader().readByAssociation(assoc)
         )[0] as { userLocation?: string } | undefined;
         const locationValue = userLocation?.userLocation;
-
-        if (!locationValue) {
-            notifyMessage(
-                this.room,
-                this.read,
-                this.sender,
-                "Please provide a valid location first."
-            );
-            return;
-        }
 
         const { searchEngineID, searchEngineApiKey } = await getAPIConfig(
             this.read
@@ -162,6 +165,17 @@ export class CommandHandler implements IHandler {
             );
             return;
         }
+
+        if (!locationValue) {
+            notifyMessage(
+                this.room,
+                this.read,
+                this.sender,
+                "Please set your location first using the `/trip location` command. Then we'll fetch local information for you."
+            );
+            return;
+        }
+
         const infoHandler = new InfoHandler(this.http, this.read);
         const eventHandler = new EventReminderHandler(this.http, this.read);
 
@@ -237,10 +251,10 @@ export class CommandHandler implements IHandler {
                 );
                 return;
             }
-            await notifyMessage(
+            await sendMessage(
+                this.modify,
+                appUser,
                 this.room,
-                this.read,
-                this.sender,
                 `${infoResponses}`
             );
             const currentDate = new Date().toLocaleDateString("en-GB");
@@ -271,7 +285,7 @@ export class CommandHandler implements IHandler {
             }
 
             if (eventResponse[0]) {
-                sendSetReminder_1(
+                await sendSetReminder_1(
                     this.app,
                     this.read,
                     this.modify,

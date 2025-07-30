@@ -28,11 +28,5 @@ export async function storeUserLocation(
         },
         true
     );
-    notifyMessage(
-        room,
-        read,       
-        sender,
-        `Your location has been stored as: ${location}. You can now ask for trip-related information!`
-    );
     return true; 
 }

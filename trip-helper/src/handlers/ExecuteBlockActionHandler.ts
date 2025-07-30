@@ -11,6 +11,11 @@ import {
 import { RoomInteractionStorage } from "../storage/RoomInteraction";
 import { TripHelperApp } from "../../TripHelperApp";
 import { UserHandler } from "./UserHandler";
+import {
+    sendGetLocationMessage,
+    sendHelperMessage,
+} from "../helpers/Notifications";
+import { CommandHandler } from "./CommandHandler";
 
 export class ExecuteBlockActionHandler {
     private context: UIKitBlockInteractionContext;
@@ -47,6 +52,17 @@ export class ExecuteBlockActionHandler {
                 return this.context.getInteractionResponder().errorResponse();
             }
         }
+
+        const commandHandler = new CommandHandler({
+            app: this.app,
+            sender: user,
+            room: room,
+            read: this.read,
+            modify: this.modify,
+            http: this.http,
+            persis: this.persistence,
+            triggerId: triggerId,
+        });
         const userHandler = new UserHandler(
             this.app,
             this.read,
@@ -61,27 +77,58 @@ export class ExecuteBlockActionHandler {
             case "Location_Accept":
                 await userHandler.confirmLocationAccepted();
                 return this.context.getInteractionResponder().successResponse();
+
             case "Location_Neglect":
                 await userHandler.noLocationDetected();
                 return this.context.getInteractionResponder().successResponse();
+
             case "Location_Request_Action":
                 await userHandler.locationDetectedThroughIP();
                 return this.context.getInteractionResponder().successResponse();
+
             case "Neglect_Location_Action":
                 await userHandler.noLocationDetectedAndNotProvided();
                 return this.context.getInteractionResponder().successResponse();
+
             case "Set_Reminder_Action":
                 await userHandler.setReminder();
                 return this.context.getInteractionResponder().successResponse();
+
             case "Set_Reminder_Action_1":
                 await userHandler.setReminder_1();
                 return this.context.getInteractionResponder().successResponse();
+
             case "Set_Reminder_Action_2":
                 await userHandler.setReminder_2();
                 return this.context.getInteractionResponder().successResponse();
+
             case "Set_Reminder_Action_3":
                 await userHandler.setReminder_3();
                 return this.context.getInteractionResponder().successResponse();
+
+            case "Show_Location_Action":
+                sendGetLocationMessage(
+                    this.app,
+                    this.read,
+                    this.modify,
+                    room,
+                    user,
+                    "Share your Location with us, We will use your device **IP address** to get your location"
+                );
+                return this.context.getInteractionResponder().successResponse();
+
+            case "Show_Info_Action":
+                await commandHandler.Info();
+                return this.context.getInteractionResponder().successResponse();
+
+            case "Need_More_Action":
+                await commandHandler.Help();
+                return this.context.getInteractionResponder().successResponse();
+
+            case "Set_Reminder_Getting_Started_Action":
+                await commandHandler.reminder();
+                return this.context.getInteractionResponder().successResponse();
+
             default:
                 return this.context.getInteractionResponder().successResponse();
         }

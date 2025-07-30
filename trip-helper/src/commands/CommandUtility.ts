@@ -17,6 +17,10 @@ import { RoomInteractionStorage } from "../storage/RoomInteraction";
 import { notifyMessage } from "../helpers/Message";
 import { storeRoomName } from "../storage/RoomNameStorage";
 import { sendGetLocationMessage } from "../helpers/Notifications";
+import {
+    RocketChatAssociationModel,
+    RocketChatAssociationRecord,
+} from "@rocket.chat/apps-engine/definition/metadata";
 
 export class CommandUtility implements ICommandUtility {
     public app: TripHelperApp;
@@ -66,12 +70,34 @@ export class CommandUtility implements ICommandUtility {
         const subCommand = this.params[1]
             ? this.params[1].toLowerCase()
             : undefined;
+
+        const assoc = new RocketChatAssociationRecord(
+            RocketChatAssociationModel.ROOM,
+            `${this.room.id}/${this.room.slugifiedName}`
+        );
+        const userLocation = (
+            await this.read.getPersistenceReader().readByAssociation(assoc)
+        )[0] as { userLocation?: string } | undefined;
+        const locationValue = userLocation?.userLocation;
+
         switch (command) {
             case "help":
                 await handler.Help();
                 break;
             case "create":
                 if (subCommand) {
+                    const roomAlreadyExists = await this.read
+                        .getRoomReader()
+                        .getByName(`askTrip-${subCommand}`);
+                    if (roomAlreadyExists) {
+                        notifyMessage(
+                            this.room,
+                            this.read,
+                            this.sender,
+                            `Trip channel with name '${subCommand}' already exists. Enjoy app's features there!🚀`
+                        );
+                        return;
+                    }
                     const createRoom = await storeRoomName(
                         this.room,
                         this.read,
@@ -86,6 +112,13 @@ export class CommandUtility implements ICommandUtility {
                             this.read,
                             this.sender,
                             `Your Trip channel ${subCommand} created successfully!, Enjoy your trip! 🚀`
+                        );
+                    } else {
+                        notifyMessage(
+                            this.room,
+                            this.read,
+                            this.sender,
+                            `Failed to create Trip channel ${subCommand}. Please try again with a different name.`
                         );
                     }
                 } else {
@@ -107,11 +140,17 @@ export class CommandUtility implements ICommandUtility {
                     this.modify,
                     this.room,
                     this.sender,
-                    "We will use your device **IP address** to get your location"
+                    locationValue
+                        ? `Your current location is set to ${locationValue}. Want to change your location? \n We will use your device **IP address** to get your location`
+                        : "Share your Location with us, We will use your device **IP address** to get your location"
                 );
                 break;
             case "info":
                 await handler.Info();
+                break;
+
+            case "start":
+                await handler.getDefaultNotification();
                 break;
             default:
                 notifyMessage(
