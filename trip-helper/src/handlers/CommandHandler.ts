@@ -323,4 +323,166 @@ export class CommandHandler implements IHandler {
             );
         }
     }
+    public async emergency(): Promise<void> {
+        const appUser = (await this.read.getUserReader().getAppUser()) as IUser;
+        const locationAssoc = new RocketChatAssociationRecord(
+            RocketChatAssociationModel.ROOM,
+            `${this.room.id}/${this.room.slugifiedName}`
+        );
+        const userLocation = (
+            await this.read.getPersistenceReader().readByAssociation(locationAssoc)
+        )[0] as { userLocation?: string } | undefined;
+        const locationValue = userLocation?.userLocation;
+
+        if (!locationValue) {
+            notifyMessage(
+                this.room,
+                this.read,
+                this.sender,
+                "Please set your location first using the `/trip location` command. Then I can fetch emergency alerts for you."
+            );
+            return;
+        }
+
+        // Get Google API key from config
+        const { searchEngineApiKey } = await getAPIConfig(this.read);
+        
+        if (!searchEngineApiKey) {
+            notifyMessage(
+                this.room,
+                this.read,
+                this.sender,
+                "Google API key is missing. Please configure the API key to fetch emergency alerts."
+            );
+            return;
+        }
+
+        notifyMessage(
+            this.room,
+            this.read,
+            this.sender,
+            `Checking for emergency alerts in ${locationValue}...`
+        );
+
+        const apiUrl = `https://www.googleapis.com/publicalerts/v1/alerts?key=${searchEngineApiKey}&source=GOOGLE&location=${encodeURIComponent(locationValue)}&maxResults=5`;
+
+        try {
+            const response = await this.http.get(apiUrl);
+            const data = response.data;
+            
+            if (!data.alerts || data.alerts.length === 0) {
+                notifyMessage(
+                    this.room,
+                    this.read,
+                    this.sender,
+                    "No current emergency alerts for your area."
+                );
+                return;
+            }
+
+            let alertMessages = "";
+            for (const alert of data.alerts.slice(0, 3)) {
+                const title = alert.title || "Emergency Alert";
+                const description = alert.description || "";
+                const severity = alert.severity || "";
+                const urgency = alert.urgency || "";
+                const certainty = alert.certainty || "";
+                const url = alert.url || "";
+                const effective = alert.effective ? new Date(alert.effective).toLocaleString() : "";
+
+                const severityEmoji = this.getSeverityEmoji(severity);
+                
+                alertMessages += `${severityEmoji} **${title}**\n`;
+                if (severity) alertMessages += `Severity: ${severity}\n`;
+                if (urgency) alertMessages += `Urgency: ${urgency}\n`;
+                if (certainty) alertMessages += `Certainty: ${certainty}\n`;
+                if (effective) alertMessages += `Effective: ${effective}\n`;
+                if (description) alertMessages += `${description}\n`;
+                if (url) alertMessages += `More info: ${url}\n`;
+                alertMessages += "\n";
+            }
+
+            await sendMessage(
+                this.modify,
+                appUser,
+                this.room,
+                `🚨 Emergency Alerts for ${locationValue}:\n\n${alertMessages}`
+            );
+        } catch (error) {
+            // console.warn("Google Public Alerts API failed, falling back to weather.gov", error);
+            await this.emergencyFallback(locationValue, appUser);
+        }
+    }
+
+    private getSeverityEmoji(severity: string): string {
+        switch (severity?.toLowerCase()) {
+            case 'extreme':
+                return '🔴';
+            case 'severe':
+                return '🟠';
+            case 'moderate':
+                return '🟡';
+            case 'minor':
+                return '🔵';
+            default:
+                return '⚠️';
+        }
+    }
+
+    private async emergencyFallback(locationValue: string, appUser: IUser): Promise<void> {
+        const apiUrl = `https://alerts.weather.gov/cap/wwaatmget.php?x=${encodeURIComponent(locationValue)}&y=0&v=ATOM`;
+
+        try {
+            const response = await this.http.get(apiUrl, { headers: { Accept: "application/xml" } });
+            const xmlData = response.content || response.data;
+            
+            if (!xmlData || typeof xmlData !== "string") {
+                notifyMessage(
+                    this.room,
+                    this.read,
+                    this.sender,
+                    "No emergency alerts found for your location."
+                );
+                return;
+            }
+
+            const entries = xmlData.match(/<entry>[\s\S]*?<\/entry>/g);
+            if (!entries || entries.length === 0) {
+                notifyMessage(
+                    this.room,
+                    this.read,
+                    this.sender,
+                    "No current emergency alerts for your area."
+                );
+                return;
+            }
+
+            let alertMessages = "";
+            for (const entry of entries.slice(0, 3)) {
+                const titleMatch = entry.match(/<title>([\s\S]*?)<\/title>/);
+                const summaryMatch = entry.match(/<summary>([\s\S]*?)<\/summary>/);
+                const linkMatch = entry.match(/<link[^>]*href="([^"]+)"[^>]*\/>/);
+
+                const title = titleMatch ? titleMatch[1] : "Alert";
+                const summary = summaryMatch ? summaryMatch[1] : "";
+                const link = linkMatch ? linkMatch[1] : "";
+
+                alertMessages += `**${title}**\n${summary}\n${link}\n\n`;
+            }
+
+            await sendMessage(
+                this.modify,
+                appUser,
+                this.room,
+                `🚨 Emergency Alerts for ${locationValue} (via weather.gov):\n\n${alertMessages}`
+            );
+        } catch (fallbackError) {
+            notifyMessage(
+                this.room,
+                this.read,
+                this.sender,
+                `Error fetching emergency alerts: ${fallbackError.message}`
+            );
+        }
+    }
 }

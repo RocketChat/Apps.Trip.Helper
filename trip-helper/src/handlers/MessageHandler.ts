@@ -1,5 +1,6 @@
 import { IHttp, IRead } from "@rocket.chat/apps-engine/definition/accessors";
 import { getAPIConfig } from "../config/settings";
+import { CHANGE_LOCATION_PROMPT } from "../const/prompts";
 
 export class MessageHandler {
     constructor(private readonly http: IHttp, private readonly read: IRead) {}
@@ -35,17 +36,42 @@ export class MessageHandler {
         location: string,
         modelType: string
     ) {
+        const locationKeywords = [
+            "change",
+            "set",
+            "store",
+            "current location",
+            "i am in",
+            "my location",
+            "move to",
+            "update location",
+            "relocate",
+        ];
+
+        const hasLocationIntent = locationKeywords.some((keyword) =>
+            message.toLowerCase().includes(keyword)
+        );
+
+        const systemPrompt = hasLocationIntent
+            ? `${CHANGE_LOCATION_PROMPT}`
+            : `You are a helpful assistant. The user is currently at ${location}.`;
+
         return {
             model: modelType,
             messages: [
+            {
+                role: "system",
+                content: systemPrompt,
+            },
+            {
+                role: "user",
+                content: [
                 {
-                    role: "system",
-                    content: `You are a helpful assistant. The user is currently at ${location}.`,
+                    type: "text",
+                    text: `Message: ${message}`,
                 },
-                {
-                    role: "user",
-                    content: message,
-                },
+                ],
+            },
             ],
         };
     }

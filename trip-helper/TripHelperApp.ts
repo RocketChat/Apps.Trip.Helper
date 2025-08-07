@@ -326,7 +326,6 @@ export class TripHelperApp extends App implements IPostMessageSent {
                 message.text,
                 locationValue
             );
-
             if (!response) {
                 notifyMessage(
                     message.room,
@@ -337,7 +336,19 @@ export class TripHelperApp extends App implements IPostMessageSent {
                 return;
             }
 
-            sendMessage(modify, appUser, message.room, `${response}`);
+            let parsed: { [key: string]: string } | null;
+            try {
+                parsed = JSON.parse(response);
+            } catch {
+                parsed = null;
+            }
+            if (parsed && typeof parsed === "object") {
+                await userHandler.changeLocation(parsed.name);
+            }
+
+            if (!parsed) {
+                sendMessage(modify, appUser, message.room, `${response}`);
+            }
         }
     }
 }

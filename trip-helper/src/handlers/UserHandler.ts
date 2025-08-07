@@ -69,6 +69,11 @@ export class UserHandler {
         );
     }
 
+    public async changeLocation(message: string): Promise<void> {
+        UserLocationStateHandler.setUserLocation(message);
+        await this.confirmLocationAccepted();
+    }
+
     public async confirmLocationAccepted(): Promise<void> {
         const userLocation = UserLocationStateHandler.getUserLocation();
         if (!userLocation) {
