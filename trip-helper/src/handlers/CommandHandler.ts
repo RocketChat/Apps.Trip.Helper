@@ -344,7 +344,6 @@ export class CommandHandler implements IHandler {
             return;
         }
 
-        // Get Google API key from config
         const { searchEngineApiKey } = await getAPIConfig(this.read);
         
         if (!searchEngineApiKey) {
@@ -409,8 +408,12 @@ export class CommandHandler implements IHandler {
                 `🚨 Emergency Alerts for ${locationValue}:\n\n${alertMessages}`
             );
         } catch (error) {
-            // console.warn("Google Public Alerts API failed, falling back to weather.gov", error);
-            await this.emergencyFallback(locationValue, appUser);
+            notifyMessage(
+                this.room,
+                this.read,
+                this.sender,
+                `Error fetching emergency alerts: ${error.message}`
+            )
         }
     }
 
@@ -426,63 +429,6 @@ export class CommandHandler implements IHandler {
                 return '🔵';
             default:
                 return '⚠️';
-        }
-    }
-
-    private async emergencyFallback(locationValue: string, appUser: IUser): Promise<void> {
-        const apiUrl = `https://alerts.weather.gov/cap/wwaatmget.php?x=${encodeURIComponent(locationValue)}&y=0&v=ATOM`;
-
-        try {
-            const response = await this.http.get(apiUrl, { headers: { Accept: "application/xml" } });
-            const xmlData = response.content || response.data;
-            
-            if (!xmlData || typeof xmlData !== "string") {
-                notifyMessage(
-                    this.room,
-                    this.read,
-                    this.sender,
-                    "No emergency alerts found for your location."
-                );
-                return;
-            }
-
-            const entries = xmlData.match(/<entry>[\s\S]*?<\/entry>/g);
-            if (!entries || entries.length === 0) {
-                notifyMessage(
-                    this.room,
-                    this.read,
-                    this.sender,
-                    "No current emergency alerts for your area."
-                );
-                return;
-            }
-
-            let alertMessages = "";
-            for (const entry of entries.slice(0, 3)) {
-                const titleMatch = entry.match(/<title>([\s\S]*?)<\/title>/);
-                const summaryMatch = entry.match(/<summary>([\s\S]*?)<\/summary>/);
-                const linkMatch = entry.match(/<link[^>]*href="([^"]+)"[^>]*\/>/);
-
-                const title = titleMatch ? titleMatch[1] : "Alert";
-                const summary = summaryMatch ? summaryMatch[1] : "";
-                const link = linkMatch ? linkMatch[1] : "";
-
-                alertMessages += `**${title}**\n${summary}\n${link}\n\n`;
-            }
-
-            await sendMessage(
-                this.modify,
-                appUser,
-                this.room,
-                `🚨 Emergency Alerts for ${locationValue} (via weather.gov):\n\n${alertMessages}`
-            );
-        } catch (fallbackError) {
-            notifyMessage(
-                this.room,
-                this.read,
-                this.sender,
-                `Error fetching emergency alerts: ${fallbackError.message}`
-            );
         }
     }
 }
