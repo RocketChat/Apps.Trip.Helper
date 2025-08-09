@@ -1,9 +1,9 @@
 import { IHttp, IRead } from "@rocket.chat/apps-engine/definition/accessors";
-import { getAPIConfig } from "../config/settings";
+import { getAPIConfig } from "../../config/settings";
 import {
     INFORMATION_CONTENT_PROMPT,
     INFORMATION_PROMPT,
-} from "../const/prompts";
+} from "../../const/prompts";
 
 export class InfoHandler {
     constructor(private readonly http: IHttp, private readonly read: IRead) {}

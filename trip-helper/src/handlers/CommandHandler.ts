@@ -25,9 +25,9 @@ import {
 } from "@rocket.chat/apps-engine/definition/metadata";
 import { notifyMessage, sendMessage } from "../helpers/Message";
 import { getAPIConfig } from "../config/settings";
-import { InfoHandler } from "./InfoHandler";
+import { InfoHandler } from "./AIHandlers/InfoHandler";
 import { LOCATION_INFORMATION } from "../enum/mainAppResponses";
-import { EventReminderHandler } from "./EventReminderHandler";
+import { EventReminderHandler } from "./AIHandlers/EventReminderHandler";
 import { storeLocationEvents } from "../storage/EventStorage";
 import { LocationEvents } from "../definition/handlers/EventHandler";
 

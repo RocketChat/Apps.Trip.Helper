@@ -26,7 +26,7 @@ import {
     IMessage,
     IPostMessageSent,
 } from "@rocket.chat/apps-engine/definition/messages";
-import { ImageHandler } from "./src/handlers/ImageHandler";
+import { ImageHandler } from "./src/handlers/AIHandlers/ImageHandler";
 import { VALIDATION_PROMPT, CONFIRMATION_PROMPT } from "./src/const/prompts";
 import { UserHandler } from "./src/handlers/UserHandler";
 
@@ -39,7 +39,7 @@ import {
     UIKitViewSubmitInteractionContext,
 } from "@rocket.chat/apps-engine/definition/uikit";
 import { ExecuteBlockActionHandler } from "./src/handlers/ExecuteBlockActionHandler";
-import { MessageHandler } from "./src/handlers/MessageHandler";
+import { MessageHandler } from "./src/handlers/AIHandlers/MessageHandler";
 import { ExecuteViewSubmit } from "./src/handlers/ExecuteViewSubmit";
 import { APP_RESPONSES } from "./src/enum/mainAppResponses";
 import { ExecuteViewClosedHandler } from "./src/handlers/ExecuteViewClosedHandler";

@@ -1,6 +1,6 @@
 import { IHttp, IRead } from "@rocket.chat/apps-engine/definition/accessors";
-import { getAPIConfig } from "../config/settings";
-import { CHANGE_LOCATION_PROMPT } from "../const/prompts";
+import { getAPIConfig } from "../../config/settings";
+import { CHANGE_LOCATION_PROMPT } from "../../const/prompts";
 
 export class MessageHandler {
     constructor(private readonly http: IHttp, private readonly read: IRead) {}
