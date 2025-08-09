@@ -53,7 +53,7 @@ export const settings: ISetting[] = [
     },
     {
         id: Settings.SEARCH_ENGINE_ID,
-        type: SettingType.STRING,
+        type: SettingType.PASSWORD,
         i18nLabel: "Google Search Engine ID",
         i18nDescription:
             "Google Custom Search Engine ID for local information.",
@@ -63,7 +63,7 @@ export const settings: ISetting[] = [
     },
     {
         id: Settings.SEARCH_ENGINE_API_KEY,
-        type: SettingType.STRING,
+        type: SettingType.PASSWORD,
         i18nLabel: "Google Search Engine API Key",
         i18nDescription: "API Key for Google Custom Search Engine.",
         required: true,

@@ -1,7 +1,7 @@
 import { IRead, IHttp } from "@rocket.chat/apps-engine/definition/accessors";
 import { IMessage } from "@rocket.chat/apps-engine/definition/messages";
-import { getAPIConfig } from "../config/settings";
-import { MODEL_CONTENT } from "../const/prompts";
+import { getAPIConfig } from "../../config/settings";
+import { MODEL_CONTENT } from "../../const/prompts";
 
 export class ImageHandler {
     constructor(private readonly http: IHttp, private readonly read: IRead) {}

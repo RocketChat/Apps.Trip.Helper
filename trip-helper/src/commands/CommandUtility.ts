@@ -152,6 +152,11 @@ export class CommandUtility implements ICommandUtility {
             case "start":
                 await handler.getDefaultNotification();
                 break;
+
+            case "emergency":
+                await handler.emergency();
+                break;
+
             default:
                 notifyMessage(
                     this.room,
