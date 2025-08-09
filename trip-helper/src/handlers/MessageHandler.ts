@@ -48,9 +48,10 @@ export class MessageHandler {
             "relocate",
         ];
 
-        const hasLocationIntent = locationKeywords.some((keyword) =>
+        const hasLocationKeyword = locationKeywords.filter((keyword) =>
             message.toLowerCase().includes(keyword)
         );
+        const hasLocationIntent = hasLocationKeyword.length >= 2;
 
         const systemPrompt = hasLocationIntent
             ? `${CHANGE_LOCATION_PROMPT}`
@@ -59,19 +60,19 @@ export class MessageHandler {
         return {
             model: modelType,
             messages: [
-            {
-                role: "system",
-                content: systemPrompt,
-            },
-            {
-                role: "user",
-                content: [
                 {
-                    type: "text",
-                    text: `Message: ${message}`,
+                    role: "system",
+                    content: systemPrompt,
                 },
-                ],
-            },
+                {
+                    role: "user",
+                    content: [
+                        {
+                            type: "text",
+                            text: `Message: ${message}`,
+                        },
+                    ],
+                },
             ],
         };
     }

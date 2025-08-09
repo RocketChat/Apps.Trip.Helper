@@ -302,6 +302,55 @@ export class TripHelperApp extends App implements IPostMessageSent {
                 return;
             }
 
+            const reminderKeywords = [
+                "remind me",
+                "set a reminder",
+                "i want to set a reminder",
+                "i need to remember",
+                "please remind me",
+                "can you remind me",
+                "reminder",
+                "don't let me forget",
+            ];
+
+            const hasReminderIntent = reminderKeywords.some((keyword) =>
+                message?.text?.toLowerCase().includes(keyword)
+            );
+
+            if (hasReminderIntent) {
+                const reminderButton = this.elementBuilder.addButton(
+                    {
+                        text: "Create Reminder",
+                        style: "primary",
+                    },
+                    {
+                        blockId: "Create_Reminder_Block",
+                        actionId: "Set_Reminder_Action",
+                    }
+                );
+
+                const reminderBlock = this.blockBuilder.createActionBlock({
+                    elements: [reminderButton],
+                });
+
+                const textBlock = this.blockBuilder.createSectionBlock({
+                    text: "I can help you create a reminder! Click the button below to set up your reminder.",
+                });
+
+                const blocks = [textBlock, reminderBlock];
+
+                const reminderMessage = modify
+                    .getCreator()
+                    .startMessage()
+                    .setRoom(message.room)
+                    .setSender(appUser)
+                    .setGroupable(false)
+                    .setBlocks(blocks);
+
+                await read.getNotifier().notifyUser(message.sender, reminderMessage.getMessage());
+                return;
+            }
+
             const messageHandler = new MessageHandler(http, read);
 
             const assoc = new RocketChatAssociationRecord(

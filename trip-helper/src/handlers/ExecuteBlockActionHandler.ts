@@ -13,7 +13,6 @@ import { TripHelperApp } from "../../TripHelperApp";
 import { UserHandler } from "./UserHandler";
 import {
     sendGetLocationMessage,
-    sendHelperMessage,
 } from "../helpers/Notifications";
 import { CommandHandler } from "./CommandHandler";
 
@@ -91,7 +90,7 @@ export class ExecuteBlockActionHandler {
                 return this.context.getInteractionResponder().successResponse();
 
             case "Set_Reminder_Action":
-                await userHandler.setReminder();
+                await userHandler.reminder();
                 return this.context.getInteractionResponder().successResponse();
 
             case "Set_Reminder_Action_1":

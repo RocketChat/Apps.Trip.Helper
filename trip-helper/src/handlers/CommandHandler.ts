@@ -330,7 +330,9 @@ export class CommandHandler implements IHandler {
             `${this.room.id}/${this.room.slugifiedName}`
         );
         const userLocation = (
-            await this.read.getPersistenceReader().readByAssociation(locationAssoc)
+            await this.read
+                .getPersistenceReader()
+                .readByAssociation(locationAssoc)
         )[0] as { userLocation?: string } | undefined;
         const locationValue = userLocation?.userLocation;
 
@@ -345,7 +347,7 @@ export class CommandHandler implements IHandler {
         }
 
         const { searchEngineApiKey } = await getAPIConfig(this.read);
-        
+
         if (!searchEngineApiKey) {
             notifyMessage(
                 this.room,
@@ -363,12 +365,14 @@ export class CommandHandler implements IHandler {
             `Checking for emergency alerts in ${locationValue}...`
         );
 
-        const apiUrl = `https://www.googleapis.com/publicalerts/v1/alerts?key=${searchEngineApiKey}&source=GOOGLE&location=${encodeURIComponent(locationValue)}&maxResults=5`;
+        const apiUrl = `https://www.googleapis.com/publicalerts/v1/alerts?key=${searchEngineApiKey}&source=GOOGLE&location=${encodeURIComponent(
+            locationValue
+        )}&maxResults=5`;
 
         try {
             const response = await this.http.get(apiUrl);
             const data = response.data;
-            
+
             if (!data.alerts || data.alerts.length === 0) {
                 notifyMessage(
                     this.room,
@@ -387,10 +391,12 @@ export class CommandHandler implements IHandler {
                 const urgency = alert.urgency || "";
                 const certainty = alert.certainty || "";
                 const url = alert.url || "";
-                const effective = alert.effective ? new Date(alert.effective).toLocaleString() : "";
+                const effective = alert.effective
+                    ? new Date(alert.effective).toLocaleString()
+                    : "";
 
                 const severityEmoji = this.getSeverityEmoji(severity);
-                
+
                 alertMessages += `${severityEmoji} **${title}**\n`;
                 if (severity) alertMessages += `Severity: ${severity}\n`;
                 if (urgency) alertMessages += `Urgency: ${urgency}\n`;
@@ -413,22 +419,22 @@ export class CommandHandler implements IHandler {
                 this.read,
                 this.sender,
                 `Error fetching emergency alerts: ${error.message}`
-            )
+            );
         }
     }
 
     private getSeverityEmoji(severity: string): string {
         switch (severity?.toLowerCase()) {
-            case 'extreme':
-                return '🔴';
-            case 'severe':
-                return '🟠';
-            case 'moderate':
-                return '🟡';
-            case 'minor':
-                return '🔵';
+            case "extreme":
+                return "🔴";
+            case "severe":
+                return "🟠";
+            case "moderate":
+                return "🟡";
+            case "minor":
+                return "🔵";
             default:
-                return '⚠️';
+                return "⚠️";
         }
     }
 }
