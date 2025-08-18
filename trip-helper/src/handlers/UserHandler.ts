@@ -23,10 +23,7 @@ import {
     RocketChatAssociationRecord,
 } from "@rocket.chat/apps-engine/definition/metadata";
 import { UserReminderModal } from "../modal/ReminderModal";
-import {
-    LocationEvent,
-    LocationEvents,
-} from "../definition/handlers/EventHandler";
+import { LocationEvent } from "../definition/handlers/EventHandler";
 
 export class UserHandler {
     public app: TripHelperApp;

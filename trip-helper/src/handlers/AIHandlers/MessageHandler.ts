@@ -1,6 +1,9 @@
 import { IHttp, IRead } from "@rocket.chat/apps-engine/definition/accessors";
 import { getAPIConfig } from "../../config/settings";
-import { CHANGE_LOCATION_PROMPT } from "../../const/prompts";
+import {
+    CHANGE_LOCATION_PROMPT,
+    CREATE_CHANNEL_PROMPT,
+} from "../../const/prompts";
 
 export class MessageHandler {
     constructor(private readonly http: IHttp, private readonly read: IRead) {}
@@ -48,14 +51,42 @@ export class MessageHandler {
             "relocate",
         ];
 
+        const createChannel = [
+            "create a channel",
+            "set up a channel",
+            "i want to create a channel",
+            "please create a channel",
+            "can you create a channel",
+            "channel",
+            "new channel",
+            "create",
+            "make a channel",
+        ];
+
+        const hasCreateChannelKeyword = createChannel.filter((keyword) =>
+            message.toLowerCase().includes(keyword)
+        );
+        const hasCreateChannelIntent = hasCreateChannelKeyword.length >= 2;
+
         const hasLocationKeyword = locationKeywords.filter((keyword) =>
             message.toLowerCase().includes(keyword)
         );
         const hasLocationIntent = hasLocationKeyword.length >= 2;
 
-        const systemPrompt = hasLocationIntent
-            ? `${CHANGE_LOCATION_PROMPT}`
-            : `You are a helpful assistant. The user is currently at ${location}.`;
+        let systemPrompt = `You are a helpful assistant. The user is currently at ${location}.`;
+
+        switch (true) {
+            case hasLocationIntent:
+                systemPrompt = CHANGE_LOCATION_PROMPT;
+                break;
+
+            case hasCreateChannelIntent:
+                systemPrompt = CREATE_CHANNEL_PROMPT;
+                break;
+            default:
+                systemPrompt = `You are a helpful assistant. The user is currently at ${location}.`;
+                break;
+        }
 
         return {
             model: modelType,

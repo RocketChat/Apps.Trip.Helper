@@ -11,10 +11,13 @@ import {
 import { RoomInteractionStorage } from "../storage/RoomInteraction";
 import { TripHelperApp } from "../../TripHelperApp";
 import { UserHandler } from "./UserHandler";
-import {
-    sendGetLocationMessage,
-} from "../helpers/Notifications";
+import { sendGetLocationMessage } from "../helpers/Notifications";
 import { CommandHandler } from "./CommandHandler";
+import {
+    RocketChatAssociationModel,
+    RocketChatAssociationRecord,
+} from "@rocket.chat/apps-engine/definition/metadata";
+import { notifyMessage } from "../helpers/Message";
 
 export class ExecuteBlockActionHandler {
     private context: UIKitBlockInteractionContext;
@@ -105,17 +108,6 @@ export class ExecuteBlockActionHandler {
                 await userHandler.setReminder_3();
                 return this.context.getInteractionResponder().successResponse();
 
-            case "Show_Location_Action":
-                sendGetLocationMessage(
-                    this.app,
-                    this.read,
-                    this.modify,
-                    room,
-                    user,
-                    "Share your Location with us, We will use your device **IP address** to get your location"
-                );
-                return this.context.getInteractionResponder().successResponse();
-
             case "Show_Info_Action":
                 await commandHandler.Info();
                 return this.context.getInteractionResponder().successResponse();
@@ -126,6 +118,43 @@ export class ExecuteBlockActionHandler {
 
             case "Set_Reminder_Getting_Started_Action":
                 await commandHandler.reminder();
+                return this.context.getInteractionResponder().successResponse();
+
+            case "Set_Channel_Action":
+                const assoc = new RocketChatAssociationRecord(
+                    RocketChatAssociationModel.ROOM,
+                    `channelrequest${user.id}`
+                );
+                const data = (await this.read
+                    .getPersistenceReader()
+                    .readByAssociation(assoc)) as Array<{
+                    channelName: string;
+                }>;
+
+                const channelName = data?.[0]?.channelName;
+
+                if (channelName) {
+                    notifyMessage(
+                        room,
+                        this.read,
+                        user,
+                        `Creating channel...${channelName}`
+                    );
+                    await commandHandler.Create(channelName);
+                } else {
+                    notifyMessage(room, this.read, user, "name not valid");
+                }
+                return this.context.getInteractionResponder().successResponse();
+
+            case "Show_Location_Action":
+                sendGetLocationMessage(
+                    this.app,
+                    this.read,
+                    this.modify,
+                    room,
+                    user,
+                    "Share your Location with us, We will use your device **IP address** to get your location"
+                );
                 return this.context.getInteractionResponder().successResponse();
 
             default:

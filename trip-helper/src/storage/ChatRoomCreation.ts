@@ -1,5 +1,5 @@
-import { IRoom } from '@rocket.chat/apps-engine/definition/rooms';
-import { IUser } from '@rocket.chat/apps-engine/definition/users';
+import { IRoom } from "@rocket.chat/apps-engine/definition/rooms";
+import { IUser } from "@rocket.chat/apps-engine/definition/users";
 import {
     IPersistence,
     IRead,
@@ -9,23 +9,23 @@ import {
     RocketChatAssociationRecord,
 } from "@rocket.chat/apps-engine/definition/metadata";
 
-export async function storeUserLocation(
+export async function ChatRoomCreation(
     read: IRead,
     sender: IUser,
     room: IRoom,
     persis: IPersistence,
-    location: string
+    name: string
 ): Promise<boolean> {
     const assoc = new RocketChatAssociationRecord(
         RocketChatAssociationModel.ROOM,
-        `${room.id}/${room.slugifiedName}`
+        `channelrequest${sender.id}`
     );
     await persis.updateByAssociation(
         assoc,
         {
-            userLocation: location,
+            channelName: name,
         },
         true
     );
-    return true; 
+    return true;
 }

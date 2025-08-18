@@ -365,15 +365,15 @@ export class CommandHandler implements IHandler {
             `Checking for emergency alerts in ${locationValue}...`
         );
 
-        const apiUrl = `https://www.googleapis.com/publicalerts/v1/alerts?key=${searchEngineApiKey}&source=GOOGLE&location=${encodeURIComponent(
+        const apiUrl = `https://api.weather.gov/alerts/active?area=${encodeURIComponent(
             locationValue
-        )}&maxResults=5`;
+        )}`;
 
         try {
             const response = await this.http.get(apiUrl);
             const data = response.data;
 
-            if (!data.alerts || data.alerts.length === 0) {
+            if (!data || !data.features || data.features.length === 0) {
                 notifyMessage(
                     this.room,
                     this.read,
@@ -384,34 +384,19 @@ export class CommandHandler implements IHandler {
             }
 
             let alertMessages = "";
-            for (const alert of data.alerts.slice(0, 3)) {
-                const title = alert.title || "Emergency Alert";
-                const description = alert.description || "";
-                const severity = alert.severity || "";
-                const urgency = alert.urgency || "";
-                const certainty = alert.certainty || "";
-                const url = alert.url || "";
-                const effective = alert.effective
-                    ? new Date(alert.effective).toLocaleString()
-                    : "";
+            for (const alert of data.features.slice(0, 3)) {
+                const properties = alert.properties;
+                const title = properties.headline || "Emergency Alert";
+                const description = properties.description || "";
 
-                const severityEmoji = this.getSeverityEmoji(severity);
-
-                alertMessages += `${severityEmoji} **${title}**\n`;
-                if (severity) alertMessages += `Severity: ${severity}\n`;
-                if (urgency) alertMessages += `Urgency: ${urgency}\n`;
-                if (certainty) alertMessages += `Certainty: ${certainty}\n`;
-                if (effective) alertMessages += `Effective: ${effective}\n`;
-                if (description) alertMessages += `${description}\n`;
-                if (url) alertMessages += `More info: ${url}\n`;
-                alertMessages += "\n";
+                alertMessages += `Warning: ${title}\n${description}\n\n`;
             }
 
             await sendMessage(
                 this.modify,
                 appUser,
                 this.room,
-                `🚨 Emergency Alerts for ${locationValue}:\n\n${alertMessages}`
+                `Emergency Alerts for ${locationValue}:\n\n${alertMessages}`
             );
         } catch (error) {
             notifyMessage(
@@ -420,21 +405,6 @@ export class CommandHandler implements IHandler {
                 this.sender,
                 `Error fetching emergency alerts: ${error.message}`
             );
-        }
-    }
-
-    private getSeverityEmoji(severity: string): string {
-        switch (severity?.toLowerCase()) {
-            case "extreme":
-                return "🔴";
-            case "severe":
-                return "🟠";
-            case "moderate":
-                return "🟡";
-            case "minor":
-                return "🔵";
-            default:
-                return "⚠️";
         }
     }
 }

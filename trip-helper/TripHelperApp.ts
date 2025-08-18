@@ -43,6 +43,7 @@ import { MessageHandler } from "./src/handlers/AIHandlers/MessageHandler";
 import { ExecuteViewSubmit } from "./src/handlers/ExecuteViewSubmit";
 import { APP_RESPONSES } from "./src/enum/mainAppResponses";
 import { ExecuteViewClosedHandler } from "./src/handlers/ExecuteViewClosedHandler";
+import { ChatRoomCreation } from "./src/storage/ChatRoomCreation";
 
 export class TripHelperApp extends App implements IPostMessageSent {
     private blockBuilder: BlockBuilder;
@@ -347,7 +348,9 @@ export class TripHelperApp extends App implements IPostMessageSent {
                     .setGroupable(false)
                     .setBlocks(blocks);
 
-                await read.getNotifier().notifyUser(message.sender, reminderMessage.getMessage());
+                await read
+                    .getNotifier()
+                    .notifyUser(message.sender, reminderMessage.getMessage());
                 return;
             }
 
@@ -392,7 +395,64 @@ export class TripHelperApp extends App implements IPostMessageSent {
                 parsed = null;
             }
             if (parsed && typeof parsed === "object") {
-                await userHandler.changeLocation(parsed.name);
+                if (parsed.name) {
+                    await userHandler.changeLocation(parsed.name);
+                } else if (parsed.channel) {
+                    parsed.channel = parsed.channel.replace(/[^\w-]/g, "");
+                    const success = await ChatRoomCreation(
+                        read,
+                        message.sender,
+                        message.room,
+                        persistence,
+                        parsed.channel
+                    );
+                    if (success) {
+                        const channelButton = this.elementBuilder.addButton(
+                            {
+                                text: `Create a Channel named ${parsed.channel}`,
+                                style: "primary",
+                            },
+                            {
+                                blockId: "Create_Channel_Block",
+                                actionId: "Set_Channel_Action",
+                            }
+                        );
+
+                        const channelBlock =
+                            this.blockBuilder.createActionBlock({
+                                elements: [channelButton],
+                            });
+
+                        const textBlock = this.blockBuilder.createSectionBlock({
+                            text: "I can help you create a channel! Click the button below to set up your channel.",
+                        });
+
+                        const blocks = [textBlock, channelBlock];
+
+                        const channelMessage = modify
+                            .getCreator()
+                            .startMessage()
+                            .setRoom(message.room)
+                            .setSender(appUser)
+                            .setGroupable(false)
+                            .setBlocks(blocks);
+
+                        await read
+                            .getNotifier()
+                            .notifyUser(
+                                message.sender,
+                                channelMessage.getMessage()
+                            );
+                        return;
+                    } else {
+                        notifyMessage(
+                            message.room,
+                            read,
+                            message.sender,
+                            "Failed to create channel. Please try again later."
+                        );
+                    }
+                }
             }
 
             if (!parsed) {
