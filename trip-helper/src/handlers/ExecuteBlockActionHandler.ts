@@ -134,12 +134,6 @@ export class ExecuteBlockActionHandler {
                 const channelName = data?.[0]?.channelName;
 
                 if (channelName) {
-                    notifyMessage(
-                        room,
-                        this.read,
-                        user,
-                        `Creating channel...${channelName}`
-                    );
                     await commandHandler.Create(channelName);
                 } else {
                     notifyMessage(room, this.read, user, "name not valid");
