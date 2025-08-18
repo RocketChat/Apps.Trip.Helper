@@ -44,6 +44,8 @@ import { ExecuteViewSubmit } from "./src/handlers/ExecuteViewSubmit";
 import { APP_RESPONSES } from "./src/enum/mainAppResponses";
 import { ExecuteViewClosedHandler } from "./src/handlers/ExecuteViewClosedHandler";
 import { ChatRoomCreation } from "./src/storage/ChatRoomCreation";
+import { storeUserLocation } from "./src/storage/UserLocationStorage";
+import { storeRoomName } from "./src/storage/RoomNameStorage";
 
 export class TripHelperApp extends App implements IPostMessageSent {
     private blockBuilder: BlockBuilder;
@@ -406,7 +408,14 @@ export class TripHelperApp extends App implements IPostMessageSent {
                         persistence,
                         parsed.channel
                     );
-                    if (success) {
+                    const storingRoomName = await storeRoomName(
+                        message.room,
+                        read,
+                        message.sender,
+                        persistence,
+                        parsed.channel
+                    );
+                    if (success && storingRoomName) {
                         const channelButton = this.elementBuilder.addButton(
                             {
                                 text: `Create a Channel named ${parsed.channel}`,
@@ -449,7 +458,7 @@ export class TripHelperApp extends App implements IPostMessageSent {
                             message.room,
                             read,
                             message.sender,
-                            "Failed to create channel. Please try again later."
+                            "Failed to Create or Store Channel name, Please try again later."
                         );
                     }
                 }
