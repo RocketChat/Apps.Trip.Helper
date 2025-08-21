@@ -23,10 +23,7 @@ import {
     RocketChatAssociationRecord,
 } from "@rocket.chat/apps-engine/definition/metadata";
 import { UserReminderModal } from "../modal/ReminderModal";
-import {
-    LocationEvent,
-    LocationEvents,
-} from "../definition/handlers/EventHandler";
+import { LocationEvent } from "../definition/handlers/EventHandler";
 
 export class UserHandler {
     public app: TripHelperApp;
@@ -67,6 +64,11 @@ export class UserHandler {
             this.sender,
             `Ohh! You are enjoying your **trip at ${message}**. Do you want to use this **location**?`
         );
+    }
+
+    public async changeLocation(message: string): Promise<void> {
+        UserLocationStateHandler.setUserLocation(message);
+        await this.confirmLocationAccepted();
     }
 
     public async confirmLocationAccepted(): Promise<void> {
@@ -187,7 +189,7 @@ export class UserHandler {
         }
     }
 
-    public async setReminder(): Promise<void> {
+    public async reminder(): Promise<void> {
         const modal = await UserReminderModal({
             app: this.app,
             modify: this.modify,
@@ -198,15 +200,13 @@ export class UserHandler {
             return;
         }
 
-        if (this.triggerId) {
+        const triggerId = this.triggerId;
+        if (triggerId) {
             await this.modify
                 .getUiController()
-                .openSurfaceView(
-                    modal,
-                    { triggerId: this.triggerId },
-                    this.sender
-                );
+                .openSurfaceView(modal, { triggerId }, this.sender);
         }
+        return;
     }
 
     public async setReminder_1(): Promise<void> {

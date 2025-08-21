@@ -26,7 +26,7 @@ import {
     IMessage,
     IPostMessageSent,
 } from "@rocket.chat/apps-engine/definition/messages";
-import { ImageHandler } from "./src/handlers/ImageHandler";
+import { ImageHandler } from "./src/handlers/AIHandlers/ImageHandler";
 import { VALIDATION_PROMPT, CONFIRMATION_PROMPT } from "./src/const/prompts";
 import { UserHandler } from "./src/handlers/UserHandler";
 
@@ -39,10 +39,13 @@ import {
     UIKitViewSubmitInteractionContext,
 } from "@rocket.chat/apps-engine/definition/uikit";
 import { ExecuteBlockActionHandler } from "./src/handlers/ExecuteBlockActionHandler";
-import { MessageHandler } from "./src/handlers/MessageHandler";
+import { MessageHandler } from "./src/handlers/AIHandlers/MessageHandler";
 import { ExecuteViewSubmit } from "./src/handlers/ExecuteViewSubmit";
 import { APP_RESPONSES } from "./src/enum/mainAppResponses";
 import { ExecuteViewClosedHandler } from "./src/handlers/ExecuteViewClosedHandler";
+import { ChatRoomCreation } from "./src/storage/ChatRoomCreation";
+import { storeUserLocation } from "./src/storage/UserLocationStorage";
+import { storeRoomName } from "./src/storage/RoomNameStorage";
 
 export class TripHelperApp extends App implements IPostMessageSent {
     private blockBuilder: BlockBuilder;
@@ -302,6 +305,57 @@ export class TripHelperApp extends App implements IPostMessageSent {
                 return;
             }
 
+            const reminderKeywords = [
+                "remind me",
+                "set a reminder",
+                "i want to set a reminder",
+                "i need to remember",
+                "please remind me",
+                "can you remind me",
+                "reminder",
+                "don't let me forget",
+            ];
+
+            const hasReminderIntent = reminderKeywords.some((keyword) =>
+                message?.text?.toLowerCase().includes(keyword)
+            );
+
+            if (hasReminderIntent) {
+                const reminderButton = this.elementBuilder.addButton(
+                    {
+                        text: "Create Reminder",
+                        style: "primary",
+                    },
+                    {
+                        blockId: "Create_Reminder_Block",
+                        actionId: "Set_Reminder_Action",
+                    }
+                );
+
+                const reminderBlock = this.blockBuilder.createActionBlock({
+                    elements: [reminderButton],
+                });
+
+                const textBlock = this.blockBuilder.createSectionBlock({
+                    text: "I can help you create a reminder! Click the button below to set up your reminder.",
+                });
+
+                const blocks = [textBlock, reminderBlock];
+
+                const reminderMessage = modify
+                    .getCreator()
+                    .startMessage()
+                    .setRoom(message.room)
+                    .setSender(appUser)
+                    .setGroupable(false)
+                    .setBlocks(blocks);
+
+                await read
+                    .getNotifier()
+                    .notifyUser(message.sender, reminderMessage.getMessage());
+                return;
+            }
+
             const messageHandler = new MessageHandler(http, read);
 
             const assoc = new RocketChatAssociationRecord(
@@ -326,7 +380,6 @@ export class TripHelperApp extends App implements IPostMessageSent {
                 message.text,
                 locationValue
             );
-
             if (!response) {
                 notifyMessage(
                     message.room,
@@ -337,7 +390,83 @@ export class TripHelperApp extends App implements IPostMessageSent {
                 return;
             }
 
-            sendMessage(modify, appUser, message.room, `${response}`);
+            let parsed: { [key: string]: string } | null;
+            try {
+                parsed = JSON.parse(response);
+            } catch {
+                parsed = null;
+            }
+            if (parsed && typeof parsed === "object") {
+                if (parsed.name) {
+                    await userHandler.changeLocation(parsed.name);
+                } else if (parsed.channel) {
+                    parsed.channel = parsed.channel.replace(/[^\w-]/g, "");
+                    const success = await ChatRoomCreation(
+                        read,
+                        message.sender,
+                        message.room,
+                        persistence,
+                        parsed.channel
+                    );
+                    const storingRoomName = await storeRoomName(
+                        message.room,
+                        read,
+                        message.sender,
+                        persistence,
+                        parsed.channel
+                    );
+                    if (success && storingRoomName) {
+                        const channelButton = this.elementBuilder.addButton(
+                            {
+                                text: `Create a Channel named ${parsed.channel}`,
+                                style: "primary",
+                            },
+                            {
+                                blockId: "Create_Channel_Block",
+                                actionId: "Set_Channel_Action",
+                            }
+                        );
+
+                        const channelBlock =
+                            this.blockBuilder.createActionBlock({
+                                elements: [channelButton],
+                            });
+
+                        const textBlock = this.blockBuilder.createSectionBlock({
+                            text: "I can help you create a channel! Click the button below to set up your channel.",
+                        });
+
+                        const blocks = [textBlock, channelBlock];
+
+                        const channelMessage = modify
+                            .getCreator()
+                            .startMessage()
+                            .setRoom(message.room)
+                            .setSender(appUser)
+                            .setGroupable(false)
+                            .setBlocks(blocks);
+
+                        await read
+                            .getNotifier()
+                            .notifyUser(
+                                message.sender,
+                                channelMessage.getMessage()
+                            );
+                        return;
+                    } else {
+                        notifyMessage(
+                            message.room,
+                            read,
+                            message.sender,
+                            "Failed to Create or Store Channel name, Please try again later."
+                        );
+                    }
+                }
+            }
+
+            if (!parsed) {
+                sendMessage(modify, appUser, message.room, `${response}`);
+            }
         }
     }
 }

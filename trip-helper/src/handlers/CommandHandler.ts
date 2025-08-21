@@ -25,9 +25,9 @@ import {
 } from "@rocket.chat/apps-engine/definition/metadata";
 import { notifyMessage, sendMessage } from "../helpers/Message";
 import { getAPIConfig } from "../config/settings";
-import { InfoHandler } from "./InfoHandler";
+import { InfoHandler } from "./AIHandlers/InfoHandler";
 import { LOCATION_INFORMATION } from "../enum/mainAppResponses";
-import { EventReminderHandler } from "./EventReminderHandler";
+import { EventReminderHandler } from "./AIHandlers/EventReminderHandler";
 import { storeLocationEvents } from "../storage/EventStorage";
 import { LocationEvents } from "../definition/handlers/EventHandler";
 
@@ -320,6 +320,90 @@ export class CommandHandler implements IHandler {
                 this.read,
                 this.sender,
                 "No local information found for this location."
+            );
+        }
+    }
+    public async emergency(): Promise<void> {
+        const appUser = (await this.read.getUserReader().getAppUser()) as IUser;
+        const locationAssoc = new RocketChatAssociationRecord(
+            RocketChatAssociationModel.ROOM,
+            `${this.room.id}/${this.room.slugifiedName}`
+        );
+        const userLocation = (
+            await this.read
+                .getPersistenceReader()
+                .readByAssociation(locationAssoc)
+        )[0] as { userLocation?: string } | undefined;
+        const locationValue = userLocation?.userLocation;
+
+        if (!locationValue) {
+            notifyMessage(
+                this.room,
+                this.read,
+                this.sender,
+                "Please set your location first using the `/trip location` command. Then I can fetch emergency alerts for you."
+            );
+            return;
+        }
+
+        const { searchEngineApiKey } = await getAPIConfig(this.read);
+
+        if (!searchEngineApiKey) {
+            notifyMessage(
+                this.room,
+                this.read,
+                this.sender,
+                "Google API key is missing. Please configure the API key to fetch emergency alerts."
+            );
+            return;
+        }
+
+        notifyMessage(
+            this.room,
+            this.read,
+            this.sender,
+            `Checking for emergency alerts in ${locationValue}...`
+        );
+
+        const apiUrl = `https://api.weather.gov/alerts/active?area=${encodeURIComponent(
+            locationValue
+        )}`;
+
+        try {
+            const response = await this.http.get(apiUrl);
+            const data = response.data;
+
+            if (!data || !data.features || data.features.length === 0) {
+                notifyMessage(
+                    this.room,
+                    this.read,
+                    this.sender,
+                    "No current emergency alerts for your area."
+                );
+                return;
+            }
+
+            let alertMessages = "";
+            for (const alert of data.features.slice(0, 3)) {
+                const properties = alert.properties;
+                const title = properties.headline || "Emergency Alert";
+                const description = properties.description || "";
+
+                alertMessages += `Warning: ${title}\n${description}\n\n`;
+            }
+
+            await sendMessage(
+                this.modify,
+                appUser,
+                this.room,
+                `Emergency Alerts for ${locationValue}:\n\n${alertMessages}`
+            );
+        } catch (error) {
+            notifyMessage(
+                this.room,
+                this.read,
+                this.sender,
+                `Error fetching emergency alerts: ${error.message}`
             );
         }
     }

@@ -1,13 +1,17 @@
 import { IHttp, IRead } from "@rocket.chat/apps-engine/definition/accessors";
-import { getAPIConfig } from "../config/settings";
+import { getAPIConfig } from "../../config/settings";
+import {
+    EVENTS_DATES_PROMPT,
+    EVENTS_REMINDER_PROMPT,
+} from "../../const/prompts";
 
-export class MessageHandler {
+export class EventReminderHandler {
     constructor(private readonly http: IHttp, private readonly read: IRead) {}
 
-    public async sendMessage(
-        message: string,
-        location: string
-    ): Promise<string> {
+    public async sendEventDetails(
+        eventResponse: string,
+        currentDate: string
+    ): Promise<any> {
         const { apiKey, modelType, apiEndpoint } = await getAPIConfig(
             this.read
         );
@@ -15,8 +19,8 @@ export class MessageHandler {
             return "API configuration is missing. Please contact the admin.";
         }
         const requestBody = await this.createMessageRequest(
-            message,
-            location,
+            eventResponse,
+            currentDate,
             modelType
         );
         try {
@@ -27,12 +31,12 @@ export class MessageHandler {
             );
             return response;
         } catch (error) {
-            return `Failed to send message: ${error.message}`;
+            return `Failed to send eventResponse: ${error.eventResponse}`;
         }
     }
     private async createMessageRequest(
-        message: string,
-        location: string,
+        eventResponse: string,
+        currentDate: string,
         modelType: string
     ) {
         return {
@@ -40,11 +44,22 @@ export class MessageHandler {
             messages: [
                 {
                     role: "system",
-                    content: `You are a helpful assistant. The user is currently at ${location}.`,
+                    content: EVENTS_REMINDER_PROMPT,
                 },
                 {
                     role: "user",
-                    content: message,
+                    content: [
+                        {
+                            type: "text",
+                            text: EVENTS_DATES_PROMPT.replace(
+                                "[PASTE THE INPUT TEXT HERE]",
+                                eventResponse
+                            ).replace(
+                                "{currentDate}",
+                                currentDate
+                            ),
+                        },
+                    ],
                 },
             ],
         };
