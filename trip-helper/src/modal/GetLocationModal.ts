@@ -1,5 +1,8 @@
 import {
+    IHttp,
     IModify,
+    IPersistence,
+    IRead,
     IUIKitSurfaceViewParam,
 } from "@rocket.chat/apps-engine/definition/accessors";
 
@@ -9,10 +12,24 @@ import {
 } from "@rocket.chat/apps-engine/definition/uikit";
 import { DividerBlock, InputBlock, TextObjectType } from "@rocket.chat/ui-kit";
 import { inputElementComponent } from "../components/InputElementComponent";
+import { TripHelperApp } from "../../TripHelperApp";
+import { Language } from "../translation/translation";
+import { tAsync } from "../translation/translator";
 
 export async function getLocationModal({
     app,
     modify,
+    read,
+    http,
+    persis,
+    language,
+}: {
+    app: TripHelperApp;
+    modify: IModify;
+    read: IRead;
+    http: IHttp;
+    persis: IPersistence;
+    language: Language;
 }): Promise<IUIKitSurfaceViewParam> {
     const { elementBuilder, blockBuilder } = app.getUtils();
     const blocks: (InputBlock | DividerBlock)[] = [];
@@ -20,8 +37,20 @@ export async function getLocationModal({
     const locationInput = inputElementComponent(
         {
             app,
-            placeholder: "Enter your location",
-            label: "Location",
+            placeholder: await tAsync(
+                "Enter_Your_Location",
+                language,
+                read,
+                http,
+                persis
+            ),
+            label: await tAsync(
+                "Location_Label",
+                language,
+                read,
+                http,
+                persis
+            ),
             optional: false,
             multiline: true,
             minLength: 5,
@@ -38,7 +67,7 @@ export async function getLocationModal({
 
     const submitButton = elementBuilder.addButton(
         {
-            text: "Submit",
+            text: await tAsync("Submit", language, read, http, persis),
             style: ButtonStyle.PRIMARY,
         },
         {
@@ -48,7 +77,7 @@ export async function getLocationModal({
     );
     const closeButton = elementBuilder.addButton(
         {
-            text: "Close",
+            text: await tAsync("Close", language, read, http, persis),
             style: ButtonStyle.DANGER,
         },
         {
@@ -62,7 +91,13 @@ export async function getLocationModal({
         type: UIKitSurfaceType.MODAL,
         title: {
             type: TextObjectType.MRKDWN,
-            text: "Select your Location",
+            text: await tAsync(
+                "Select_Your_Location",
+                language,
+                read,
+                http,
+                persis
+            ),
         },
         blocks: blocks,
         close: closeButton,

@@ -1,11 +1,9 @@
-import {
-    IRead,
-    IModify,
-    IHttp,
-} from "@rocket.chat/apps-engine/definition/accessors";
+import { IRead, IModify } from "@rocket.chat/apps-engine/definition/accessors";
 import { IRoom } from "@rocket.chat/apps-engine/definition/rooms";
 import { IUser } from "@rocket.chat/apps-engine/definition/users";
 import { TripHelperApp } from "../../TripHelperApp";
+import { t } from "../translation/translation";
+import { getResponseLanguage } from "./Language";
 
 export async function sendHelperMessage(
     read: IRead,
@@ -14,12 +12,10 @@ export async function sendHelperMessage(
     sender: IUser
 ) {
     const appUser = (await read.getUserReader().getAppUser()) as IUser;
-    const message = `Hi ${sender.name} 👋, I am your Trip Helper!
-        • use \`/trip help\` to get help   
-        • use \`/trip create\` to create a separate trip channel
-        • use \`/trip reminder\` to set a reminder for your trip
-        • use \`/trip location\` to share your location with the trip channel;
-        • use \`/trip info\` to get information about your current location`;
+    const language = await getResponseLanguage(read, sender);
+    const message = t("Helper_Message", language, {
+        name: sender.name || sender.username,
+    });
 
     const helperMessage = modify
         .getCreator()
@@ -42,13 +38,14 @@ export async function sendSetReminder_1(
 ): Promise<void> {
     const appUser = (await read.getUserReader().getAppUser()) as IUser;
     const { elementBuilder, blockBuilder } = app.getUtils();
+    const language = await getResponseLanguage(read, sender);
     const text = blockBuilder.createSectionBlock({
         text: message,
     });
 
     const sendSetReminder = elementBuilder.addButton(
         {
-            text: "Set Reminder",
+            text: t("Button_Set_Reminder", language),
             style: "primary",
         },
         {
@@ -82,13 +79,14 @@ export async function sendSetReminder_2(
 ): Promise<void> {
     const appUser = (await read.getUserReader().getAppUser()) as IUser;
     const { elementBuilder, blockBuilder } = app.getUtils();
+    const language = await getResponseLanguage(read, sender);
     const text = blockBuilder.createSectionBlock({
         text: message,
     });
 
     const sendSetReminder = elementBuilder.addButton(
         {
-            text: "Set Reminder",
+            text: t("Button_Set_Reminder", language),
             style: "primary",
         },
         {
@@ -122,13 +120,14 @@ export async function sendSetReminder_3(
 ): Promise<void> {
     const appUser = (await read.getUserReader().getAppUser()) as IUser;
     const { elementBuilder, blockBuilder } = app.getUtils();
+    const language = await getResponseLanguage(read, sender);
     const text = blockBuilder.createSectionBlock({
         text: message,
     });
 
     const sendSetReminder = elementBuilder.addButton(
         {
-            text: "Set Reminder",
+            text: t("Button_Set_Reminder", language),
             style: "primary",
         },
         {
@@ -162,13 +161,14 @@ export async function sendConfirmationMessage(
 ): Promise<void> {
     const appUser = (await read.getUserReader().getAppUser()) as IUser;
     const { elementBuilder, blockBuilder } = app.getUtils();
+    const language = await getResponseLanguage(read, sender);
     const text = blockBuilder.createSectionBlock({
         text: `*${message}*`,
     });
 
     const confirmationButton = elementBuilder.addButton(
         {
-            text: "Yes",
+            text: t("Button_Yes", language),
             style: "primary",
         },
         {
@@ -179,7 +179,7 @@ export async function sendConfirmationMessage(
 
     const neglectButton = elementBuilder.addButton(
         {
-            text: "No",
+            text: t("Button_No", language),
             style: "danger",
         },
         {
@@ -213,12 +213,13 @@ export async function sendGetLocationMessage(
 ): Promise<void> {
     const appUser = (await read.getUserReader().getAppUser()) as IUser;
     const { elementBuilder, blockBuilder } = app.getUtils();
+    const language = await getResponseLanguage(read, sender);
     const text = blockBuilder.createSectionBlock({
         text: `${message}`,
     });
     const locationButton = elementBuilder.addButton(
         {
-            text: "Share Location",
+            text: t("Share_Location", language),
             style: "primary",
         },
         {
@@ -228,7 +229,7 @@ export async function sendGetLocationMessage(
     );
     const neglectLocationButton = elementBuilder.addButton(
         {
-            text: "Not Now",
+            text: t("Not_Now", language),
             style: "danger",
         },
         {
@@ -259,13 +260,16 @@ export async function sendDefaultNotification(
 ): Promise<void> {
     const appUser = (await read.getUserReader().getAppUser()) as IUser;
     const { elementBuilder, blockBuilder } = app.getUtils();
+    const language = await getResponseLanguage(read, user);
 
     const text = blockBuilder.createSectionBlock({
-        text: `Hello ${user.name} 👋, I am your Trip Helper Bot, How can I assist you today?`,
+        text: t("Default_Welcome", language, {
+            name: user.name || user.username,
+        }),
     });
 
     const changeLocationButtonElement = elementBuilder.addButton(
-        { text: "Show Location", style: "primary" },
+        { text: t("Button_Show_Location", language), style: "primary" },
         {
             blockId: "Show_Location_Block",
             actionId: "Show_Location_Action",
@@ -273,7 +277,7 @@ export async function sendDefaultNotification(
     );
 
     const setReminderButtonElement = elementBuilder.addButton(
-        { text: "Set Reminder", style: "primary" },
+        { text: t("Button_Set_Reminder", language), style: "primary" },
         {
             blockId: "Set_Reminder_Getting_Started_Block",
             actionId: "Set_Reminder_Getting_Started_Action",
@@ -281,7 +285,7 @@ export async function sendDefaultNotification(
     );
 
     const showInfoButtonElement = elementBuilder.addButton(
-        { text: "Show Info", style: "secondary" },
+        { text: t("Button_Show_Info", language), style: "secondary" },
         {
             blockId: "Show_Info_Block",
             actionId: "Show_Info_Action",
@@ -289,7 +293,7 @@ export async function sendDefaultNotification(
     );
 
     const needMoreButtonElement = elementBuilder.addButton(
-        { text: "Need More", style: "secondary" },
+        { text: t("Button_Need_More", language), style: "secondary" },
         {
             blockId: "Need_More_Block",
             actionId: "Need_More_Action",

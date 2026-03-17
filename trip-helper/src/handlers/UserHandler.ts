@@ -24,6 +24,8 @@ import {
 } from "@rocket.chat/apps-engine/definition/metadata";
 import { UserReminderModal } from "../modal/ReminderModal";
 import { LocationEvent } from "../definition/handlers/EventHandler";
+import { Language, t } from "../translation/translation";
+import { getResponseLanguage } from "../helpers/Language";
 
 export class UserHandler {
     public app: TripHelperApp;
@@ -34,6 +36,7 @@ export class UserHandler {
     public http: IHttp;
     public persis: IPersistence;
     public triggerId?: string;
+    private readonly language: Promise<Language>;
     constructor(
         app: TripHelperApp,
         read: IRead,
@@ -52,9 +55,11 @@ export class UserHandler {
         this.http = http;
         this.persis = persis;
         this.triggerId = triggerId;
+        this.language = getResponseLanguage(this.read, sender);
     }
 
     public async confirmLocation(message: string): Promise<void> {
+        const language = await this.language;
         UserLocationStateHandler.setUserLocation(message);
         sendConfirmationMessage(
             this.app,
@@ -62,7 +67,9 @@ export class UserHandler {
             this.modify,
             this.room,
             this.sender,
-            `Ohh! You are enjoying your **trip at ${message}**. Do you want to use this **location**?`
+            t("Enjoying_Trip_At_Location", language, {
+                location: message,
+            })
         );
     }
 
@@ -72,13 +79,14 @@ export class UserHandler {
     }
 
     public async confirmLocationAccepted(): Promise<void> {
+        const language = await this.language;
         const userLocation = UserLocationStateHandler.getUserLocation();
         if (!userLocation) {
             notifyMessage(
                 this.room,
                 this.read,
                 this.sender,
-                "No location found to confirm."
+                t("No_Location_Found_To_Confirm", language)
             );
             return;
         }
@@ -95,7 +103,7 @@ export class UserHandler {
                 this.room,
                 this.read,
                 this.sender,
-                "Unable to store your location due to a system error. Please try again later."
+                t("Unable_To_Store_Location_System_Error", language)
             );
             return;
         }
@@ -103,33 +111,38 @@ export class UserHandler {
             this.room,
             this.read,
             this.sender,
-            `Your location has been stored as: ${userLocation}. You can now ask for trip-related information!`
+            t("Location_Stored_Successfully", language, {
+                location: userLocation,
+            })
         );
     }
 
     public async noLocationDetected(): Promise<void> {
+        const language = await this.language;
         sendGetLocationMessage(
             this.app,
             this.read,
             this.modify,
             this.room,
             this.sender,
-            "We **can't detect** your location automatically. Please **share your location** with us to continue. We will use your device **IP address** to get your location."
+            t("Cannot_Detect_Location", language)
         );
     }
 
     public async noLocationDetectedAndNotProvided(): Promise<void> {
+        const language = await this.language;
         notifyMessage(
             this.room,
             this.read,
             this.sender,
-            "You know we can't help you without your location, right? Please provide your **Location to continue**."
+            t("Location_Required_To_Continue", language)
         );
     }
 
     private cachedLocationIP: any = null;
 
     public async locationDetectedThroughIP(): Promise<void> {
+        const language = await this.language;
         if (!this.cachedLocationIP) {
             this.cachedLocationIP = await getUserLocationIP(
                 this.http,
@@ -144,7 +157,10 @@ export class UserHandler {
                 this.room,
                 this.read,
                 this.sender,
-                `Your Location coordinates: ${response.latitude}, ${response.longitude}`
+                t("Location_Coordinates", language, {
+                    latitude: response.latitude,
+                    longitude: response.longitude,
+                })
             );
             const userLocation = await getUserAddressThroughIP(
                 response,
@@ -158,7 +174,7 @@ export class UserHandler {
                     this.room,
                     this.read,
                     this.sender,
-                    "No location found to confirm."
+                    t("No_Location_Found_To_Confirm", language)
                 );
                 return;
             }
@@ -175,7 +191,7 @@ export class UserHandler {
                     this.room,
                     this.read,
                     this.sender,
-                    "Unable to store your location due to a system error. Please try again later."
+                    t("Unable_To_Store_Location_System_Error", language)
                 );
                 return;
             }
@@ -184,16 +200,23 @@ export class UserHandler {
                 this.room,
                 this.read,
                 this.sender,
-                `Your location has been stored as: ${userLocation}. You can now ask for trip-related information!`
+                t("Location_Stored_Successfully", language, {
+                    location: userLocation,
+                })
             );
         }
     }
 
     public async reminder(): Promise<void> {
+        const language = await this.language;
         const modal = await UserReminderModal({
             app: this.app,
             modify: this.modify,
+            read: this.read,
+            http: this.http,
+            persis: this.persis,
             room: this.room,
+            language,
         });
         if (modal instanceof Error) {
             this.app.getLogger().error(modal.message);
@@ -210,6 +233,7 @@ export class UserHandler {
     }
 
     public async setReminder_1(): Promise<void> {
+        const language = await this.language;
         const assoc = new RocketChatAssociationRecord(
             RocketChatAssociationModel.ROOM,
             `${this.room.id}/events`
@@ -226,8 +250,12 @@ export class UserHandler {
         const modal = await UserReminderModal({
             app: this.app,
             modify: this.modify,
+            read: this.read,
+            http: this.http,
+            persis: this.persis,
             room: this.room,
             eventResponse: sendData,
+            language,
         });
         if (modal instanceof Error) {
             this.app.getLogger().error(modal.message);
@@ -245,6 +273,7 @@ export class UserHandler {
         }
     }
     public async setReminder_2(): Promise<void> {
+        const language = await this.language;
         const assoc = new RocketChatAssociationRecord(
             RocketChatAssociationModel.ROOM,
             `${this.room.id}/events`
@@ -261,8 +290,12 @@ export class UserHandler {
         const modal = await UserReminderModal({
             app: this.app,
             modify: this.modify,
+            read: this.read,
+            http: this.http,
+            persis: this.persis,
             room: this.room,
             eventResponse: sendData,
+            language,
         });
         if (modal instanceof Error) {
             this.app.getLogger().error(modal.message);
@@ -280,6 +313,7 @@ export class UserHandler {
         }
     }
     public async setReminder_3(): Promise<void> {
+        const language = await this.language;
         const assoc = new RocketChatAssociationRecord(
             RocketChatAssociationModel.ROOM,
             `${this.room.id}/events`
@@ -295,8 +329,12 @@ export class UserHandler {
         const modal = await UserReminderModal({
             app: this.app,
             modify: this.modify,
+            read: this.read,
+            http: this.http,
+            persis: this.persis,
             room: this.room,
             eventResponse: sendData,
+            language,
         });
         if (modal instanceof Error) {
             this.app.getLogger().error(modal.message);

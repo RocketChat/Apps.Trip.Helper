@@ -46,6 +46,8 @@ import { ExecuteViewClosedHandler } from "./src/handlers/ExecuteViewClosedHandle
 import { ChatRoomCreation } from "./src/storage/ChatRoomCreation";
 import { storeUserLocation } from "./src/storage/UserLocationStorage";
 import { storeRoomName } from "./src/storage/RoomNameStorage";
+import { t } from "./src/translation/translation";
+import { getResponseLanguage } from "./src/helpers/Language";
 
 export class TripHelperApp extends App implements IPostMessageSent {
     private blockBuilder: BlockBuilder;
@@ -77,19 +79,25 @@ export class TripHelperApp extends App implements IPostMessageSent {
                 id: "trip-helper-scheduled-task",
                 processor: async (job, read, modify, http, persis) => {
                     this.getLogger().info("Scheduled task executed:", job);
-                    const room = job.room;
+                    const jobData = (job.data as any) || {};
+                    const room = jobData.room || job.room;
+                    const reminderMessage = jobData.message || job.message;
+                    const targetUser = jobData.user;
 
                     const appUser = await read
                         .getUserReader()
                         .getAppUser(this.getID());
 
                     if (room && appUser) {
-                        sendMessage(
-                            modify,
-                            appUser,
-                            room,
-                            `:loudspeaker:  You asked me to remind you about the message \n ${job.message}`
+                        const language = await getResponseLanguage(
+                            read,
+                            targetUser
                         );
+                        const text = t("Scheduled_Reminder_Message", language, {
+                            message: reminderMessage || "",
+                        });
+
+                        sendMessage(modify, appUser, room, text);
                     } else {
                         this.getLogger().error(
                             "Scheduled task: Room or User not found."
@@ -215,6 +223,7 @@ export class TripHelperApp extends App implements IPostMessageSent {
             persistence
         );
         const imageProcessor = new ImageHandler(http, read);
+        const userLanguage = await getResponseLanguage(read, message.sender);
 
         this.getLogger().info(
             `Message sent by user ${message.sender.username}: ${message.text}`
@@ -228,7 +237,7 @@ export class TripHelperApp extends App implements IPostMessageSent {
                 message.room,
                 read,
                 message.sender,
-                APP_RESPONSES.PROCESSING_IMAGE,
+                t(APP_RESPONSES.PROCESSING_IMAGE, userLanguage),
                 message.threadId
             );
             const isImage = await imageProcessor.validateImage(
@@ -240,7 +249,7 @@ export class TripHelperApp extends App implements IPostMessageSent {
                     message.room,
                     read,
                     message.sender,
-                    APP_RESPONSES.VALID_IMAGE_UPLOADED,
+                    t(APP_RESPONSES.VALID_IMAGE_UPLOADED, userLanguage),
                     message.threadId
                 );
                 const response = await imageProcessor.processImage(
@@ -269,7 +278,7 @@ export class TripHelperApp extends App implements IPostMessageSent {
                     message.room,
                     read,
                     message.sender,
-                    APP_RESPONSES.INVALID_IMAGE_UPLOADED,
+                    t(APP_RESPONSES.INVALID_IMAGE_UPLOADED, userLanguage),
                     message.threadId
                 );
                 return;
@@ -284,7 +293,7 @@ export class TripHelperApp extends App implements IPostMessageSent {
                 message.room,
                 read,
                 message.sender,
-                APP_RESPONSES.LOCATION_DETECTED_THROUGH_IP
+                t(APP_RESPONSES.LOCATION_DETECTED_THROUGH_IP, userLanguage)
             );
         } else if (
             typeof message.text === "string" &&
@@ -300,7 +309,7 @@ export class TripHelperApp extends App implements IPostMessageSent {
                     message.room,
                     read,
                     message.sender,
-                    "App user not found. Please try again later."
+                    t("App_User_Not_Found_Try_Later", userLanguage)
                 );
                 return;
             }
@@ -323,7 +332,7 @@ export class TripHelperApp extends App implements IPostMessageSent {
             if (hasReminderIntent) {
                 const reminderButton = this.elementBuilder.addButton(
                     {
-                        text: "Create Reminder",
+                        text: t("Button_Create_Reminder", userLanguage),
                         style: "primary",
                     },
                     {
@@ -337,7 +346,7 @@ export class TripHelperApp extends App implements IPostMessageSent {
                 });
 
                 const textBlock = this.blockBuilder.createSectionBlock({
-                    text: "I can help you create a reminder! Click the button below to set up your reminder.",
+                    text: t("Reminder_Helper_Text", userLanguage),
                 });
 
                 const blocks = [textBlock, reminderBlock];
@@ -372,7 +381,10 @@ export class TripHelperApp extends App implements IPostMessageSent {
                     message.room,
                     read,
                     message.sender,
-                    APP_RESPONSES.RESPONSES_WHEN_NO_LOCATION_IS_SET
+                    t(
+                        APP_RESPONSES.RESPONSES_WHEN_NO_LOCATION_IS_SET,
+                        userLanguage
+                    )
                 );
                 return;
             }
@@ -385,7 +397,7 @@ export class TripHelperApp extends App implements IPostMessageSent {
                     message.room,
                     read,
                     message.sender,
-                    "Failed to process your message. Please try again later."
+                    t("Failed_To_Process_Message", userLanguage)
                 );
                 return;
             }
@@ -418,7 +430,9 @@ export class TripHelperApp extends App implements IPostMessageSent {
                     if (success && storingRoomName) {
                         const channelButton = this.elementBuilder.addButton(
                             {
-                                text: `Create a Channel named ${parsed.channel}`,
+                                text: t("Button_Create_Channel", userLanguage, {
+                                    channel: parsed.channel,
+                                }),
                                 style: "primary",
                             },
                             {
@@ -433,7 +447,7 @@ export class TripHelperApp extends App implements IPostMessageSent {
                             });
 
                         const textBlock = this.blockBuilder.createSectionBlock({
-                            text: "I can help you create a channel! Click the button below to set up your channel.",
+                            text: t("Channel_Helper_Text", userLanguage),
                         });
 
                         const blocks = [textBlock, channelBlock];
@@ -458,7 +472,7 @@ export class TripHelperApp extends App implements IPostMessageSent {
                             message.room,
                             read,
                             message.sender,
-                            "Failed to Create or Store Channel name, Please try again later."
+                            t("Failed_To_Create_Channel", userLanguage)
                         );
                     }
                 }

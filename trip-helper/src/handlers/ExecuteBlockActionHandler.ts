@@ -18,6 +18,8 @@ import {
     RocketChatAssociationRecord,
 } from "@rocket.chat/apps-engine/definition/metadata";
 import { notifyMessage } from "../helpers/Message";
+import { t } from "../translation/translation";
+import { getResponseLanguage } from "../helpers/Language";
 
 export class ExecuteBlockActionHandler {
     private context: UIKitBlockInteractionContext;
@@ -33,6 +35,7 @@ export class ExecuteBlockActionHandler {
     }
     public async handleActions(): Promise<IUIKitResponse> {
         const { actionId, user } = this.context.getInteractionData();
+        const language = await getResponseLanguage(this.read, user);
         let { room } = this.context.getInteractionData();
         const persistenceRead = this.read.getPersistenceReader();
 
@@ -136,7 +139,12 @@ export class ExecuteBlockActionHandler {
                 if (channelName) {
                     await commandHandler.Create(channelName);
                 } else {
-                    notifyMessage(room, this.read, user, "name not valid");
+                    notifyMessage(
+                        room,
+                        this.read,
+                        user,
+                        t("Channel_Name_Invalid", language)
+                    );
                 }
                 return this.context.getInteractionResponder().successResponse();
 
@@ -147,7 +155,7 @@ export class ExecuteBlockActionHandler {
                     this.modify,
                     room,
                     user,
-                    "Share your Location with us, We will use your device **IP address** to get your location"
+                    t("Share_Location_Request", language)
                 );
                 return this.context.getInteractionResponder().successResponse();
 

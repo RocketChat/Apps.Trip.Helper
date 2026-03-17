@@ -6,6 +6,8 @@ import {
 import { IRoom } from "@rocket.chat/apps-engine/definition/rooms";
 import { IUser } from "@rocket.chat/apps-engine/definition/users";
 import { notifyMessage } from "../helpers/Message";
+import { t } from "../translation/translation";
+import { getResponseLanguage } from "../helpers/Language";
 
 export async function getUserLocationIP(
     http: IHttp,
@@ -15,6 +17,7 @@ export async function getUserLocationIP(
 ): Promise<{ latitude: number; longitude: number } | null> {
     const res = await http.get("https://ipinfo.io/json");
     const data = res.data;
+    const language = await getResponseLanguage(read, sender);
 
     if (data && data.loc) {
         const [latitude, longitude] = data.loc.split(",");
@@ -27,7 +30,7 @@ export async function getUserLocationIP(
         room,
         read,
         sender,
-        "**Unable to retrieve location** from IP address."
+        t("Unable_To_Retrieve_Location_From_IP", language)
     );
     return null;
 }
@@ -42,11 +45,14 @@ export async function getUserAddressThroughIP(
     const addressResponse = await http.get(
         `https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${response.latitude}&lon=${response.longitude}&zoom=14&addressdetails=1`
     );
+    const language = await getResponseLanguage(read, sender);
     notifyMessage(
         room,
         read,
         sender,
-        `Your Location: ${addressResponse.data.display_name}`
+        t("Your_Location_Display", language, {
+            displayName: addressResponse.data.display_name,
+        })
     );
     return addressResponse.data.display_name;
 }

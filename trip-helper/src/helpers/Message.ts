@@ -4,6 +4,8 @@ import { IUser } from "@rocket.chat/apps-engine/definition/users";
 import { CreateDirectRoom } from "./CreateDirectRoom";
 import { BlockBuilder } from "../lib/BlockBuilder";
 import { OnInstallContent } from "../enum/messages";
+import { t } from "../translation/translation";
+import { getResponseLanguage } from "./Language";
 
 export async function sendMessage(
     modify: IModify,
@@ -38,9 +40,10 @@ export async function sendHelperMessageOnInstall(
 
     const room = await CreateDirectRoom(read, modify, members);
     const blockBuilder = new BlockBuilder(appId);
-    const title = [OnInstallContent.PREVIEW_TITLE.toString()];
-    const description = [OnInstallContent.PREVIEW_DESCRIPTION.toString()];
-    const contextElements = [OnInstallContent.PREVIEW_CONTEXT.toString()];
+    const language = await getResponseLanguage(read, user);
+    const title = [t("Install_Preview_Title", language)];
+    const description = [t("Install_Preview_Description", language)];
+    const contextElements = [t("Install_Preview_Context", language)];
     const footer = blockBuilder.createContextBlock({
         contextElements: contextElements,
     });
@@ -54,9 +57,10 @@ export async function sendHelperMessageOnInstall(
         footer,
         thumb,
     });
-    const text = `Hey **${
-        user.username
-    }** 👋, I am your Trip Helper! \n ${OnInstallContent.Welcome_Message.toString()}`;
+    const text = t("Welcome_User", language, {
+        username: user.username,
+        welcomeMessage: t("Install_Welcome_Message", language),
+    });
 
     const previewBuilder = modify
         .getCreator()

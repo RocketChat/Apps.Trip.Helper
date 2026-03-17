@@ -30,6 +30,8 @@ import { LOCATION_INFORMATION } from "../enum/mainAppResponses";
 import { EventReminderHandler } from "./AIHandlers/EventReminderHandler";
 import { storeLocationEvents } from "../storage/EventStorage";
 import { LocationEvents } from "../definition/handlers/EventHandler";
+import { Language, t } from "../translation/translation";
+import { getResponseLanguage } from "../helpers/Language";
 
 export class CommandHandler implements IHandler {
     public app: TripHelperApp;
@@ -41,6 +43,7 @@ export class CommandHandler implements IHandler {
     public persis: IPersistence;
     public triggerId?: string;
     public threadId?: string;
+    private readonly language: Promise<Language>;
 
     constructor(params: IHanderParams) {
         this.app = params.app;
@@ -52,12 +55,14 @@ export class CommandHandler implements IHandler {
         this.persis = params.persis;
         this.triggerId = params.triggerId;
         this.threadId = params.threadId;
+        this.language = getResponseLanguage(this.read, this.sender);
     }
     public async Help(): Promise<void> {
         sendHelperMessage(this.read, this.modify, this.room, this.sender);
     }
 
     public async Create(subCommand: string): Promise<void> {
+        const language = await this.language;
         const appUser = (await this.read.getUserReader().getAppUser()) as IUser;
         const members = [this.sender.username, appUser.username];
         const room = await CreatePrivateGroup(
@@ -68,9 +73,9 @@ export class CommandHandler implements IHandler {
         );
         const appId = this.app.getID();
         const blockBuilder = new BlockBuilder(appId);
-        const title = [OnInstallContent.PREVIEW_TITLE.toString()];
-        const description = [OnInstallContent.PREVIEW_DESCRIPTION.toString()];
-        const contextElements = [OnInstallContent.PREVIEW_CONTEXT.toString()];
+        const title = [t("Install_Preview_Title", language)];
+        const description = [t("Install_Preview_Description", language)];
+        const contextElements = [t("Install_Preview_Context", language)];
         const footer = blockBuilder.createContextBlock({
             contextElements: contextElements,
         });
@@ -84,9 +89,10 @@ export class CommandHandler implements IHandler {
             footer,
             thumb,
         });
-        const text = `Hey **${
-            this.sender.username
-        }** 👋, I am your Trip Helper! \n ${OnInstallContent.Welcome_Message.toString()}`;
+        const text = t("Welcome_User", language, {
+            username: this.sender.username,
+            welcomeMessage: t("Install_Welcome_Message", language),
+        });
 
         const previewBuilder = this.modify
             .getCreator()
@@ -111,10 +117,15 @@ export class CommandHandler implements IHandler {
     }
 
     public async reminder(): Promise<void> {
+        const language = await this.language;
         const modal = await UserReminderModal({
             app: this.app,
             modify: this.modify,
+            read: this.read,
+            http: this.http,
+            persis: this.persis,
             room: this.room,
+            language,
         });
         if (modal instanceof Error) {
             this.app.getLogger().error(modal.message);
@@ -141,6 +152,7 @@ export class CommandHandler implements IHandler {
     }
 
     public async Info(): Promise<void> {
+        const language = await this.language;
         const appUser = (await this.read.getUserReader().getAppUser()) as IUser;
 
         const assoc = new RocketChatAssociationRecord(
@@ -161,7 +173,7 @@ export class CommandHandler implements IHandler {
                 this.room,
                 this.read,
                 this.sender,
-                "Google Custom Search API key or searchEngineID is missing."
+                t("Google_Search_Config_Missing", language)
             );
             return;
         }
@@ -171,7 +183,7 @@ export class CommandHandler implements IHandler {
                 this.room,
                 this.read,
                 this.sender,
-                "Please set your location first using the `/trip location` command. Then we'll fetch local information for you."
+                t("Location_Not_Set_Info", language)
             );
             return;
         }
@@ -193,7 +205,9 @@ export class CommandHandler implements IHandler {
             this.room,
             this.read,
             this.sender,
-            `Fetching local information for ${locationValue}...`
+            t("Fetching_Local_Info", language, {
+                location: locationValue,
+            })
         );
 
         for (const category of categories) {
@@ -222,11 +236,16 @@ export class CommandHandler implements IHandler {
                     }
                 }
             } catch (error) {
+                const errorMessage =
+                    error instanceof Error ? error.message : String(error);
                 notifyMessage(
                     this.room,
                     this.read,
                     this.sender,
-                    `Error fetching data for category "${category}": ${error.message}`
+                    t("Error_Fetching_Category", language, {
+                        category,
+                        error: errorMessage,
+                    })
                 );
             }
         }
@@ -236,7 +255,10 @@ export class CommandHandler implements IHandler {
                 this.room,
                 this.read,
                 this.sender,
-                `Processing ${allResults.length} local events found in ${locationValue}...`
+                t("Processing_Local_Events", language, {
+                    count: allResults.length,
+                    location: locationValue,
+                })
             );
             const infoResponses = await infoHandler.sendInfo(
                 allResults,
@@ -247,7 +269,7 @@ export class CommandHandler implements IHandler {
                     this.room,
                     this.read,
                     this.sender,
-                    "No relevant events found in your area."
+                    t("No_Relevant_Events", language)
                 );
                 return;
             }
@@ -279,7 +301,7 @@ export class CommandHandler implements IHandler {
                     this.room,
                     this.read,
                     this.sender,
-                    "Failed to store event details. Please try again later."
+                    t("Failed_To_Store_Event_Details", language)
                 );
                 return;
             }
@@ -291,7 +313,10 @@ export class CommandHandler implements IHandler {
                     this.modify,
                     this.room,
                     this.sender,
-                    `Here are some events happening in ${locationValue}. You can set a reminder for any of these events by clicking the button below. \n\n Would you like to set a reminder for: "${eventResponse[0].title}"?`
+                    t("Set_Reminder_Primary", language, {
+                        location: locationValue,
+                        event: eventResponse[0].title,
+                    })
                 );
             }
             if (eventResponse[1]) {
@@ -301,7 +326,9 @@ export class CommandHandler implements IHandler {
                     this.modify,
                     this.room,
                     this.sender,
-                    `Would you like to set a reminder for: "${eventResponse[1].title}"?`
+                    t("Set_Reminder_Generic", language, {
+                        event: eventResponse[1].title,
+                    })
                 );
             }
             if (eventResponse[2]) {
@@ -311,7 +338,9 @@ export class CommandHandler implements IHandler {
                     this.modify,
                     this.room,
                     this.sender,
-                    `Would you like to set a reminder for: "${eventResponse[2].title}"?`
+                    t("Set_Reminder_Generic", language, {
+                        event: eventResponse[2].title,
+                    })
                 );
             }
         } else {
@@ -319,11 +348,12 @@ export class CommandHandler implements IHandler {
                 this.room,
                 this.read,
                 this.sender,
-                "No local information found for this location."
+                t("No_Local_Info", language)
             );
         }
     }
     public async emergency(): Promise<void> {
+        const language = await this.language;
         const appUser = (await this.read.getUserReader().getAppUser()) as IUser;
         const locationAssoc = new RocketChatAssociationRecord(
             RocketChatAssociationModel.ROOM,
@@ -341,7 +371,7 @@ export class CommandHandler implements IHandler {
                 this.room,
                 this.read,
                 this.sender,
-                "Please set your location first using the `/trip location` command. Then I can fetch emergency alerts for you."
+                t("Location_Not_Set_Emergency", language)
             );
             return;
         }
@@ -353,7 +383,7 @@ export class CommandHandler implements IHandler {
                 this.room,
                 this.read,
                 this.sender,
-                "Google API key is missing. Please configure the API key to fetch emergency alerts."
+                t("Google_Api_Key_Missing", language)
             );
             return;
         }
@@ -362,7 +392,9 @@ export class CommandHandler implements IHandler {
             this.room,
             this.read,
             this.sender,
-            `Checking for emergency alerts in ${locationValue}...`
+            t("Checking_Emergency_Alerts", language, {
+                location: locationValue,
+            })
         );
 
         const apiUrl = `https://api.weather.gov/alerts/active?area=${encodeURIComponent(
@@ -378,7 +410,7 @@ export class CommandHandler implements IHandler {
                     this.room,
                     this.read,
                     this.sender,
-                    "No current emergency alerts for your area."
+                    t("No_Emergency_Alerts", language)
                 );
                 return;
             }
@@ -386,24 +418,36 @@ export class CommandHandler implements IHandler {
             let alertMessages = "";
             for (const alert of data.features.slice(0, 3)) {
                 const properties = alert.properties;
-                const title = properties.headline || "Emergency Alert";
+                const title =
+                    properties.headline ||
+                    t("Emergency_Default_Title", language);
                 const description = properties.description || "";
 
-                alertMessages += `Warning: ${title}\n${description}\n\n`;
+                alertMessages += t("Emergency_Warning_Line", language, {
+                    title,
+                    description,
+                });
             }
 
             await sendMessage(
                 this.modify,
                 appUser,
                 this.room,
-                `Emergency Alerts for ${locationValue}:\n\n${alertMessages}`
+                t("Emergency_Alerts_Header", language, {
+                    location: locationValue,
+                    alerts: alertMessages,
+                })
             );
         } catch (error) {
+            const errorMessage =
+                error instanceof Error ? error.message : String(error);
             notifyMessage(
                 this.room,
                 this.read,
                 this.sender,
-                `Error fetching emergency alerts: ${error.message}`
+                t("Error_Fetching_Emergency", language, {
+                    error: errorMessage,
+                })
             );
         }
     }

@@ -6,6 +6,7 @@ import {
 
 export enum Settings {
     MODEL_TYPE = "model_type",
+    RESPONSE_LANGUAGE = "response_language",
     API_KEY = "api_key",
     API_ENDPOINT = "api_endpoint",
     SEARCH_ENGINE_ID = "search_engine_id",
@@ -31,6 +32,23 @@ export const settings: ISetting[] = [
         required: true,
         public: true,
         packageValue: "meta-llama/Llama-3.2-11B-Vision-Instruct",
+    },
+    {
+        id: Settings.RESPONSE_LANGUAGE,
+        type: SettingType.SELECT,
+        i18nLabel: "Response language",
+        i18nDescription:
+            "Language used by the app for all responses.",
+        values: [
+            { key: "en", i18nLabel: "English" },
+            { key: "de", i18nLabel: "Deutsch" },
+            { key: "pl", i18nLabel: "Polski" },
+            { key: "pt", i18nLabel: "Português" },
+            { key: "ru", i18nLabel: "Русский" },
+        ],
+        required: true,
+        public: true,
+        packageValue: "en",
     },
     {
         id: Settings.API_KEY,

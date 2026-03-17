@@ -21,6 +21,8 @@ import {
     RocketChatAssociationModel,
     RocketChatAssociationRecord,
 } from "@rocket.chat/apps-engine/definition/metadata";
+import { t } from "../translation/translation";
+import { getResponseLanguage } from "../helpers/Language";
 
 export class CommandUtility implements ICommandUtility {
     public app: TripHelperApp;
@@ -33,7 +35,6 @@ export class CommandUtility implements ICommandUtility {
     public persis: IPersistence;
     public triggerId?: string;
     public threadId?: string;
-
     constructor(props: ICommandUtilityParams) {
         this.app = props.app;
         this.params = props.params;
@@ -48,6 +49,7 @@ export class CommandUtility implements ICommandUtility {
     }
 
     public async resolveCommand(): Promise<void> {
+        const language = await getResponseLanguage(this.read, this.sender);
         const roomInteractionStorage = new RoomInteractionStorage(
             this.persis,
             this.read.getPersistenceReader(),
@@ -94,7 +96,9 @@ export class CommandUtility implements ICommandUtility {
                             this.room,
                             this.read,
                             this.sender,
-                            `Trip channel with name '${subCommand}' already exists. Enjoy app's features there!🚀`
+                            t("Trip_Channel_Already_Exists", language, {
+                                channel: subCommand,
+                            })
                         );
                         return;
                     }
@@ -111,14 +115,18 @@ export class CommandUtility implements ICommandUtility {
                             this.room,
                             this.read,
                             this.sender,
-                            `Your Trip channel ${subCommand} created successfully!, Enjoy your trip! 🚀`
+                            t("Trip_Channel_Created", language, {
+                                channelname: subCommand,
+                            })
                         );
                     } else {
                         notifyMessage(
                             this.room,
                             this.read,
                             this.sender,
-                            `Failed to create Trip channel ${subCommand}. Please try again with a different name.`
+                            t("Failed_To_Create_Trip_Channel", language, {
+                                channel: subCommand,
+                            })
                         );
                     }
                 } else {
@@ -126,7 +134,7 @@ export class CommandUtility implements ICommandUtility {
                         this.room,
                         this.read,
                         this.sender,
-                        "Please provide a name for the trip channel. Usage: `/trip create <channel-name>`"
+                        t("Provide_Trip_Channel_Name", language)
                     );
                 }
                 break;
@@ -141,8 +149,10 @@ export class CommandUtility implements ICommandUtility {
                     this.room,
                     this.sender,
                     locationValue
-                        ? `Your current location is set to ${locationValue}. Want to change your location? \n We will use your device **IP address** to get your location`
-                        : "Share your Location with us, We will use your device **IP address** to get your location"
+                        ? t("Current_Location_Message", language, {
+                              location: locationValue,
+                          })
+                        : t("Share_Location_Request", language)
                 );
                 break;
             case "info":
@@ -162,7 +172,9 @@ export class CommandUtility implements ICommandUtility {
                     this.room,
                     this.read,
                     this.sender,
-                    `**Invalid subcommand**: "${command}". Type \`/trip help\` for a list of available commands.`
+                    t("Invalid_Command_Message", language, {
+                        command,
+                    })
                 );
         }
     }

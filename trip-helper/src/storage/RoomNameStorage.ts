@@ -9,6 +9,8 @@ import {
 } from "@rocket.chat/apps-engine/definition/metadata";
 import { IRoom } from "@rocket.chat/apps-engine/definition/rooms";
 import { IUser } from "@rocket.chat/apps-engine/definition/users";
+import { t } from "../translation/translation";
+import { getResponseLanguage } from "../helpers/Language";
 
 export async function storeRoomName(
     room: IRoom,
@@ -26,6 +28,7 @@ export async function storeRoomName(
         .getPersistenceReader()
         .readByAssociation(assoc)) as Array<{ tripRooms: string[] }>;
     const roomList = existingData?.[0]?.tripRooms || [];
+    const language = await getResponseLanguage(read, sender);
     if (!roomList.includes(`askTrip-${roomName}`)) {
         roomList.push(`askTrip-${roomName}`);
     } else {
@@ -33,7 +36,9 @@ export async function storeRoomName(
             room,
             read,
             sender,
-            `Room name '${roomName}' already exists. Please choose a different name.`
+            t("Room_Name_Duplicate_Error", language, {
+                roomName,
+            })
         );
         return false;
     }

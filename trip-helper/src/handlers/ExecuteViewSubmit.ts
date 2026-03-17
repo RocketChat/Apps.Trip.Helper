@@ -13,6 +13,8 @@ import { IUser } from "@rocket.chat/apps-engine/definition/users";
 import { notifyMessage } from "../helpers/Message";
 import { RoomInteractionStorage } from "../storage/RoomInteraction";
 import { IJobFormData } from "../definition/storage/IJobFormData";
+import { Language, t } from "../translation/translation";
+import { getResponseLanguage } from "../helpers/Language";
 
 export class ExecuteViewSubmit {
     private context: UIKitViewSubmitInteractionContext;
@@ -29,6 +31,7 @@ export class ExecuteViewSubmit {
 
     public async handleActions(): Promise<IUIKitResponse> {
         const { view, user, triggerId } = this.context.getInteractionData();
+        const language = await getResponseLanguage(this.read, user);
         const persistenceRead = this.read.getPersistenceReader();
         const roomInteractionStorage = new RoomInteractionStorage(
             this.persistence,
@@ -41,7 +44,7 @@ export class ExecuteViewSubmit {
         const viewId = view.id;
         switch (viewId) {
             case "user-reminder-modal":
-                return this.handleCreate(room, user, view, triggerId);
+                return this.handleCreate(room, user, view, triggerId, language);
         }
         return this.context.getInteractionResponder().errorResponse();
     }
@@ -50,7 +53,8 @@ export class ExecuteViewSubmit {
         room: IRoom,
         user: IUser,
         view: any,
-        triggerId: string
+        triggerId: string,
+        language: Language
     ): Promise<IUIKitResponse> {
         const timeStateValue =
             view.state?.["time-input-block"]?.["time-input-action"] ||
@@ -67,7 +71,8 @@ export class ExecuteViewSubmit {
         const validation = await this.formValidation(
             timeStateValue,
             messageStateValue,
-            dateStateValue
+            dateStateValue,
+            language
         );
 
         if (validation !== true) {
@@ -75,11 +80,10 @@ export class ExecuteViewSubmit {
                 room,
                 this.read,
                 user,
-                `${
-                    user.name || user.username
-                }, Please fix the following errors: ${JSON.stringify(
-                    validation
-                )}`
+                t("Form_Fix_Errors", language, {
+                    name: user.name || user.username,
+                    errors: JSON.stringify(validation),
+                })
             );
             return this.context.getInteractionResponder().viewErrorResponse({
                 viewId: view.id,
@@ -112,7 +116,7 @@ export class ExecuteViewSubmit {
                 room,
                 this.read,
                 user,
-                "Failed to schedule the reminder. Please try again later."
+                t("Failed_To_Schedule_Reminder", language)
             );
             return this.context.getInteractionResponder().errorResponse();
         }
@@ -121,7 +125,10 @@ export class ExecuteViewSubmit {
             room,
             this.read,
             user,
-            `Reminder set for **${when}**: **${formData.message}**`
+            t("Reminder_Set_For", language, {
+                when: when.toString(),
+                message: formData.message,
+            })
         );
         return this.context.getInteractionResponder().successResponse();
     }
@@ -129,18 +136,19 @@ export class ExecuteViewSubmit {
     private async formValidation(
         whenTime: string,
         message: string,
-        date: string
+        date: string,
+        language: Language
     ): Promise<Record<string, string> | true> {
         if (!message) {
-            return { message: "Message cannot be empty" };
+            return { message: t("Validation_Message_Required", language) };
         }
 
         if (!whenTime) {
-            return { whenTime: "Time cannot be empty" };
+            return { whenTime: t("Validation_Time_Required", language) };
         }
 
         if (!date) {
-            return { date: "Date cannot be empty" };
+            return { date: t("Validation_Date_Required", language) };
         }
         const [year, month, day] = date.split("-").map(Number);
         const [hours, minutes] = whenTime.split(":").map(Number);
@@ -158,7 +166,7 @@ export class ExecuteViewSubmit {
 
         if (scheduledTime.getTime() <= now.getTime()) {
             return {
-                whenTime: "The selected date and time must be in the future",
+                whenTime: t("Validation_Time_In_Future", language),
             };
         }
         return true;

@@ -1,5 +1,8 @@
 import {
+    IHttp,
     IModify,
+    IPersistence,
+    IRead,
     IUIKitSurfaceViewParam,
 } from "@rocket.chat/apps-engine/definition/accessors";
 import { TripHelperApp } from "../../TripHelperApp";
@@ -15,17 +18,27 @@ import {
     timePickerComponent,
 } from "../components/TimePickerComponent";
 import { LocationEvent } from "../definition/handlers/EventHandler";
+import { Language } from "../translation/translation";
+import { tAsync } from "../translation/translator";
 
 export async function UserReminderModal({
     app,
     modify,
+    read,
+    http,
+    persis,
     room,
     eventResponse,
+    language,
 }: {
     app: TripHelperApp;
     modify: IModify;
+    read: IRead;
+    http: IHttp;
+    persis: IPersistence;
     room: IRoom;
     eventResponse?: LocationEvent;
+    language: Language;
 }): Promise<IUIKitSurfaceViewParam> {
     const viewId = `user-reminder-modal`;
     const { elementBuilder, blockBuilder } = app.getUtils();
@@ -43,7 +56,16 @@ export async function UserReminderModal({
             time = eventResponse.time;
         }
         if (eventResponse.title) {
-            initialMessage = `Remind me for ${eventResponse.title}`;
+            initialMessage = await tAsync(
+                "Reminder_Default_Event_Message",
+                language,
+                read,
+                http,
+                persis,
+                {
+                    event: eventResponse.title,
+                }
+            );
         }
     }
 
@@ -61,8 +83,20 @@ export async function UserReminderModal({
     const reminderDateInput = datePickerComponent(
         {
             app,
-            placeholder: "YYYY-MM-DD",
-            label: "Reminder Date",
+            placeholder: await tAsync(
+                "Reminder_Date_Placeholder",
+                language,
+                read,
+                http,
+                persis
+            ),
+            label: await tAsync(
+                "Reminder_Date_Label",
+                language,
+                read,
+                http,
+                persis
+            ),
             initialValue: date,
             dispatchActionConfig: ["on_character_entered"],
         },
@@ -75,8 +109,20 @@ export async function UserReminderModal({
     const reminderTimeInput = timePickerComponent(
         {
             app,
-            placeholder: "HH:MM",
-            label: "Remind at",
+            placeholder: await tAsync(
+                "Reminder_Time_Placeholder",
+                language,
+                read,
+                http,
+                persis
+            ),
+            label: await tAsync(
+                "Reminder_Time_Label",
+                language,
+                read,
+                http,
+                persis
+            ),
             initialValue: time,
             dispatchActionConfig: ["on_character_entered"],
         },
@@ -89,8 +135,20 @@ export async function UserReminderModal({
     const reminderMessageInput = inputElementComponent(
         {
             app,
-            placeholder: "Happy hour start! 🎉 🍣",
-            label: "Message",
+            placeholder: await tAsync(
+                "Reminder_Message_Placeholder",
+                language,
+                read,
+                http,
+                persis
+            ),
+            label: await tAsync(
+                "Reminder_Message_Label",
+                language,
+                read,
+                http,
+                persis
+            ),
             initialValue: initialMessage,
             optional: false,
             multiline: true,
@@ -105,7 +163,13 @@ export async function UserReminderModal({
 
     const submitButton = elementBuilder.addButton(
         {
-            text: "Confirm",
+            text: await tAsync(
+                "Reminder_Submit_Button",
+                language,
+                read,
+                http,
+                persis
+            ),
             style: ButtonStyle.PRIMARY,
         },
         {
@@ -116,7 +180,13 @@ export async function UserReminderModal({
 
     const closeButton = elementBuilder.addButton(
         {
-            text: "Cancel",
+            text: await tAsync(
+                "Reminder_Close_Button",
+                language,
+                read,
+                http,
+                persis
+            ),
         },
         {
             blockId: "cancel-reminder-block",
@@ -128,7 +198,13 @@ export async function UserReminderModal({
         type: UIKitSurfaceType.MODAL,
         title: {
             type: TextObjectType.MRKDWN,
-            text: "Create Reminder",
+            text: await tAsync(
+                "Reminder_Modal_Title",
+                language,
+                read,
+                http,
+                persis
+            ),
         },
         blocks: blocks,
         close: closeButton,
